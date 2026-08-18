@@ -36,9 +36,12 @@
         }
 
         .topbar {
-            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #2563eb 100%);
+            background: linear-gradient(135deg, #dedfd8 0%, #566692 55%, #6e8dce 100%);
             border: 0;
             padding: .9rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
         }
 
         .brand-title{
@@ -52,8 +55,8 @@
 }
 
 .logo-img{
-    width: 50px;
-    height: 50px;
+    width: 200px;
+    height: 80px;
     flex-shrink: 0;
 }
 
@@ -537,11 +540,11 @@
     <nav class="navbar navbar-expand-lg topbar shadow-sm">
         <div class="container-fluid page-wrap py-0">
             <a class="navbar-brand brand-title" href="{{ route('dashboard') }}">
-                <img src="{{ asset('images/logo (2).png') }}"
+                <img src="{{ asset('images/logo.png') }}"
                     alt="Webzone Expertz"
                     class="logo-img">
             
-                <span class="brand-text">WEBZONE EXPERTZ</span>
+                {{-- <span class="brand-text">WEBZONE EXPERTZ</span> --}}
             </a>
             <div class="ms-auto">
                 <div class="dropdown">

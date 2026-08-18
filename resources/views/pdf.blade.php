@@ -690,23 +690,40 @@
 <body>
 
     @unless ($isPdf)
+        {{-- Bootstrap Icons --}}
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+
+        <style>
+            .modal-header-wa  { background: #25D366; color: #fff; }
+            .modal-header-wa .btn-close { filter: brightness(0) invert(1); }
+            .modal-header-mail { background: #2563eb; color: #fff; }
+            .modal-header-mail .btn-close { filter: brightness(0) invert(1); }
+        </style>
+
         <div class="toolbar no-print">
             <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left"></i> Dashboard
             </a>
             <a href="{{ route('invoices.download', $invoice) }}" class="btn btn-success btn-sm">
-                Download PDF
+                <i class="bi bi-file-earmark-pdf"></i> Download PDF
             </a>
-            <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#whatsappModal">
-                Send WhatsApp
+            <button type="button" class="btn btn-sm btn-success" style="background:#25D366;border-color:#25D366;"
+                data-bs-toggle="modal" data-bs-target="#whatsappModal">
+                <i class="bi bi-whatsapp"></i> Send WhatsApp
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#emailModal">
+                <i class="bi bi-envelope-fill"></i> Send Email
             </button>
         </div>
 
+        {{-- ===== WHATSAPP MODAL ===== --}}
         <div class="modal fade" id="whatsappModal" tabindex="-1" aria-labelledby="whatsappModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable mx-3 mx-sm-auto">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="whatsappModalLabel">Send Invoice on WhatsApp</h5>
+            <div class="modal-dialog modal-dialog-centered mx-3 mx-sm-auto">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header modal-header-wa">
+                        <h5 class="modal-title fw-bold" id="whatsappModalLabel">
+                            <i class="bi bi-whatsapp me-2"></i>Send Invoice on WhatsApp
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form id="whatsappForm">
@@ -715,15 +732,65 @@
                                 <label for="whatsappPhone" class="form-label fw-semibold">WhatsApp Number</label>
                                 <input type="tel" id="whatsappPhone" name="phone" class="form-control"
                                     placeholder="e.g. 61481234567"
-                                    value="{{ preg_replace('/\D+/', '', (string) ($invoice->phone ?? '')) }}" required>
+                                    value="{{ preg_replace('/\D+/', '', (string) ($invoice->phone ?? '')) }}"
+                                    required>
                                 <div class="form-text">Enter number with country code (no + or spaces).</div>
                             </div>
                             <div id="whatsappAlert" class="alert d-none mb-0" role="alert"></div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-success" id="whatsappSubmitBtn">
+                            <button type="submit" class="btn btn-success fw-semibold px-4" id="whatsappSubmitBtn"
+                                style="background:#25D366;border-color:#25D366;">
                                 Send PDF
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- ===== EMAIL MODAL ===== --}}
+        <div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered mx-3 mx-sm-auto" style="max-width:500px;">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header modal-header-mail">
+                        <h5 class="modal-title fw-bold" id="emailModalLabel">
+                            <i class="bi bi-envelope-fill me-2"></i>Send Invoice by Email
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="emailForm">
+                        <div class="modal-body pb-0">
+
+                            <p class="text-muted small mb-3">
+                                The invoice PDF will be attached and sent to the recipient's email address.
+                            </p>
+
+                            <div class="mb-3">
+                                <label for="emailToName" class="form-label fw-semibold">Recipient Name</label>
+                                <input type="text" id="emailToName" name="to_name" class="form-control"
+                                    value="{{ $invoice->customer_name }}" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="emailToAddress" class="form-label fw-semibold">Email Address</label>
+                                <input type="email" id="emailToAddress" name="to_email" class="form-control"
+                                    value="{{ $invoice->email }}" placeholder="recipient@example.com" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="emailMessage" class="form-label fw-semibold">Message <span class="text-muted fw-normal">(optional)</span></label>
+                                <textarea id="emailMessage" name="message" class="form-control" rows="3"
+                                    placeholder="Leave blank to use the default message."></textarea>
+                            </div>
+
+                            <div id="emailAlert" class="alert d-none mb-0" role="alert"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary fw-semibold px-4" id="emailSubmitBtn">
+                                <i class="bi bi-send-fill me-1"></i> Send Email
                             </button>
                         </div>
                     </form>
@@ -733,65 +800,121 @@
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-            (function() {
-                const form = document.getElementById('whatsappForm');
-                const phoneInput = document.getElementById('whatsappPhone');
-                const alertBox = document.getElementById('whatsappAlert');
-                const submitBtn = document.getElementById('whatsappSubmitBtn');
+        (function () {
 
-                function showAlert(type, message) {
-                    alertBox.className = 'alert alert-' + type;
-                    alertBox.textContent = message;
-                    alertBox.classList.remove('d-none');
+            // ---------- helpers ----------
+            function showAlert(boxId, type, html) {
+                const el = document.getElementById(boxId);
+                el.className = 'alert alert-' + type;
+                el.innerHTML = html;
+                el.classList.remove('d-none');
+            }
+            function hideAlert(boxId) {
+                document.getElementById(boxId).classList.add('d-none');
+            }
+
+            // ---------- WhatsApp ----------
+            const waForm      = document.getElementById('whatsappForm');
+            const waPhoneInput = document.getElementById('whatsappPhone');
+            const waSubmitBtn = document.getElementById('whatsappSubmitBtn');
+
+            waForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                hideAlert('whatsappAlert');
+
+                const phone = waPhoneInput.value.replace(/\D+/g, '');
+                if (phone.length < 8) {
+                    showAlert('whatsappAlert', 'danger', 'Please enter a valid WhatsApp number with country code.');
+                    return;
                 }
 
-                form.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    alertBox.classList.add('d-none');
+                waSubmitBtn.disabled = true;
+                waSubmitBtn.textContent = 'Sending...';
 
-                    const phone = phoneInput.value.replace(/\D+/g, '');
-                    if (phone.length < 8) {
-                        showAlert('danger', 'Please enter a valid WhatsApp number with country code.');
+                try {
+                    const res = await fetch(@json(route('invoices.whatsapp', $invoice)), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': @json(csrf_token())
+                        },
+                        body: JSON.stringify({ phone })
+                    });
+
+                    const data = await res.json();
+
+                    if (!res.ok || !data.success) {
+                        showAlert('whatsappAlert', 'danger', data.message || 'Failed to send WhatsApp message.');
                         return;
                     }
 
-                    submitBtn.disabled = true;
-                    submitBtn.textContent = 'Sending...';
-
-                    try {
-                        const response = await fetch(@json(route('invoices.whatsapp', $invoice)), {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': @json(csrf_token())
-                            },
-                            body: JSON.stringify({
-                                phone
-                            })
-                        });
-
-                        const data = await response.json();
-
-                        if (!response.ok || !data.success) {
-                            showAlert('danger', data.message || 'Failed to send WhatsApp message.');
-                            return;
-                        }
-
-                        if (data.mode === 'web' && data.whatsapp_url) {
-                            showAlert('success', data.message || 'Opening WhatsApp...');
-                            window.open(data.whatsapp_url, '_blank');
-                        } else {
-                            showAlert('success', data.message || 'Invoice PDF sent on WhatsApp.');
-                        }
-                    } catch (error) {
-                        showAlert('danger', 'Something went wrong while sending WhatsApp message.');
-                    } finally {
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'Send PDF';
+                    if (data.whatsapp_url) {
+                        window.location.href = data.whatsapp_url;
+                        return;
                     }
-                });
-            })();
+
+                    showAlert('whatsappAlert', 'success', data.message || 'Invoice PDF sent on WhatsApp.');
+                } catch (err) {
+                    showAlert('whatsappAlert', 'danger', 'Something went wrong. Please try again.');
+                } finally {
+                    waSubmitBtn.disabled = false;
+                    waSubmitBtn.textContent = 'Send PDF';
+                }
+            });
+
+            // ---------- Email ----------
+            const emailForm      = document.getElementById('emailForm');
+            const emailSubmitBtn = document.getElementById('emailSubmitBtn');
+
+            emailForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                hideAlert('emailAlert');
+
+                const toEmail  = document.getElementById('emailToAddress').value.trim();
+                const toName   = document.getElementById('emailToName').value.trim();
+                const message  = document.getElementById('emailMessage').value.trim();
+
+                if (!toEmail || !toName) {
+                    showAlert('emailAlert', 'danger', 'Please fill in recipient name and email.');
+                    return;
+                }
+
+                emailSubmitBtn.disabled = true;
+                emailSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending...';
+
+                try {
+                    const res = await fetch(@json(route('invoices.email', $invoice)), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': @json(csrf_token())
+                        },
+                        body: JSON.stringify({ to_email: toEmail, to_name: toName, message })
+                    });
+
+                    const data = await res.json();
+
+                    if (!res.ok || !data.success) {
+                        showAlert('emailAlert', 'danger', data.message || 'Failed to send email.');
+                        return;
+                    }
+
+                    showAlert('emailAlert', 'success', '✅ ' + (data.message || 'Invoice email sent successfully.'));
+                    emailForm.reset();
+                    document.getElementById('emailToName').value  = @json($invoice->customer_name);
+                    document.getElementById('emailToAddress').value = @json($invoice->email ?? '');
+
+                } catch (err) {
+                    showAlert('emailAlert', 'danger', 'Something went wrong. Please try again.');
+                } finally {
+                    emailSubmitBtn.disabled = false;
+                    emailSubmitBtn.innerHTML = '<i class="bi bi-send-fill me-1"></i> Send Email';
+                }
+            });
+
+        })();
         </script>
     @endunless
 
@@ -804,8 +927,8 @@
 
                     <div class="company-header-flex">
 
-                        @if (file_exists(public_path('images/logo1.gif')))
-                            <img src="{{ $isPdf ? public_path('images/logo (2).png') : asset('images/logo (2).png') }}"
+                        @if (file_exists(public_path('images/logo.png')))
+                            <img src="{{ $isPdf ? public_path('images/logo.png') : asset('images/logo.png') }}"
                                 class="company-logo" alt="Logo">
                         @endif
 

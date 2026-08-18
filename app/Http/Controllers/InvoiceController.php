@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\InvoiceMail;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Services\WhatsAppService;
@@ -9,6 +10,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -289,6 +291,34 @@ class InvoiceController extends Controller
             'whatsapp_url' => "https://wa.me/{$phone}?text={$message}",
             'pdf_url' => $pdfUrl,
         ]);
+    }
+
+    public function sendEmail(Request $request, Invoice $invoice)
+    {
+        $data = $request->validate([
+            'to_email' => ['required', 'email', 'max:255'],
+            'to_name' => ['required', 'string', 'max:255'],
+            'message' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $invoice->load('items');
+
+        $bodyMessage = $data['message'] ?: "Please find attached invoice {$invoice->invoice_no}. Total amount due: $" . number_format((float) $invoice->total, 2) . ".";
+
+        try {
+            Mail::to($data['to_email'], $data['to_name'])
+                ->send(new InvoiceMail($invoice, $data['to_name'], $bodyMessage));
+
+            return response()->json([
+                'success' => true,
+                'message' => "Invoice {$invoice->invoice_no} sent to {$data['to_email']}.",
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send email: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function sharedPdf(string $token)

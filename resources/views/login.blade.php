@@ -212,8 +212,8 @@
                 class="workflow-img img-fluid"> --}}
 
             <!-- Company Logo -->
-            <img src="{{ asset('images/logo1.gif') }}" alt="Webzone Expertz" class="company-logo img-fluid">
-            <h3 class="text-center" style="color: #ff7803;">Welcome to Webzone Expertz Invoice Management System</h3>
+            <img src="{{ asset('images/logo.png') }}" alt="Webzone Expertz" class="company-logo img-fluid">
+            <h3 class="text-center" style="color: rgba(71, 40, 226, 0.95);">Welcome to Invoice Management System</h3>
 
         </div>
 

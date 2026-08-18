@@ -15,9 +15,12 @@
         }
 
         .topbar {
-            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #2563eb 100%);
+            background: linear-gradient(135deg, #dedfd8 0%, #566692 55%, #6e8dce 100%);
             border: 0;
             padding: .9rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
         }
 
         .brand-title{
@@ -31,8 +34,8 @@
         }
 
         .logo-img{
-            width: 50px;
-            height: 50px;
+            width: 200px;
+            height: 80px;
             flex-shrink: 0;
         }
 
@@ -174,11 +177,11 @@
         <a class="navbar-brand brand-title d-flex align-items-center"
            href="{{ route('dashboard') }}">
 
-            <img src="{{ asset('images/logo (2).png') }}"
+            <img src="{{ asset('images/logo.png') }}"
                  alt="Webzone Expertz"
                  class="logo-img">
 
-            <span class="brand-text">WEBZONE EXPERTZ</span>
+            {{-- <span class="brand-text">WEBZONE EXPERTZ</span> --}}
         </a>
 
         <div class="ms-auto">
@@ -300,7 +303,100 @@
             </div>
 
             <!-- Payment -->
+
             <div class="card invoice-card">
+                <div class="card-header">
+                    <h5>Payment Information</h5>
+                </div>
+
+                <div class="card-body">
+                    <div class="row">
+
+                        {{-- Bank Name --}}
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Bank Name</label>
+
+                            <select class="form-select" name="bank_name" id="bank_name">
+                                <option value="">Select Bank</option>
+
+                                <option value="SBI"
+                                    {{ old('bank_name', $invoice?->bank_name) == 'SBI' ? 'selected' : '' }}>
+                                    SBI
+                                </option>
+
+                                <option value="PNB"
+                                    {{ old('bank_name', $invoice?->bank_name) == 'PNB' ? 'selected' : '' }}>
+                                    PNB
+                                </option>
+
+                                <option value="HDFC"
+                                    {{ old('bank_name', $invoice?->bank_name) == 'HDFC' ? 'selected' : '' }}>
+                                    HDFC
+                                </option>
+
+                                <option value="AXIS"
+                                    {{ old('bank_name', $invoice?->bank_name) == 'AXIS' ? 'selected' : '' }}>
+                                    AXIS
+                                </option>
+                            </select>
+                        </div>
+
+
+                        {{-- BSB --}}
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">BSB</label>
+
+                            <input type="text"
+                                class="form-control"
+                                name="bsb"
+                                id="bsb"
+                                value="{{ old('bsb', $invoice?->bsb) }}">
+                        </div>
+
+
+                        {{-- Account Number --}}
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Account Number</label>
+
+                            <input type="text"
+                                class="form-control"
+                                name="account_number"
+                                id="account_number"
+                                value="{{ old('account_number', $invoice?->account_number) }}">
+                        </div>
+
+
+                        {{-- Payment Method --}}
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">
+                                Payment Method <span class="text-danger">*</span>
+                            </label>
+
+                            <select class="form-select" name="payment_method" required>
+
+                                @foreach (['Cash', 'Bank Transfer', 'PayPal', 'Card'] as $method)
+
+                                    <option value="{{ $method }}"
+                                        {{ old(
+                                            'payment_method',
+                                            $invoice?->payment_method ?? 'Bank Transfer'
+                                        ) === $method ? 'selected' : '' }}>
+
+                                        {{ $method }}
+
+                                    </option>
+
+                                @endforeach
+
+                            </select>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+
+            {{-- <div class="card invoice-card">
                 <div class="card-header">
                     <h5>Payment Information</h5>
                 </div>
@@ -312,14 +408,14 @@
                                 value="{{ old('bank_name', $invoice?->bank_name) }}">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">Account Number</label>
-                            <input type="text" class="form-control" name="account_number"
-                                value="{{ old('account_number', $invoice?->account_number) }}">
-                        </div>
-                        <div class="col-md-3 mb-3">
                             <label class="form-label">BSB</label>
                             <input type="text" class="form-control" name="bsb"
                                 value="{{ old('bsb', $invoice?->bsb) }}">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Account Number</label>
+                            <input type="text" class="form-control" name="account_number"
+                                value="{{ old('account_number', $invoice?->account_number) }}">
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Payment Method <span class="text-danger">*</span></label>
@@ -334,7 +430,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
             <!-- Products -->
             <div class="card invoice-card">
@@ -528,6 +624,51 @@
         document.querySelectorAll('.item-row').forEach(bindRowEvents);
         calculateTotals();
     </script>
+
+<script>
+    const bankDetails = {
+        "SBI": {
+            bsb: "123456",
+            account_number: "1234567890"
+        },
+
+        "PNB": {
+            bsb: "062000",
+            account_number: "123456789"
+        },
+
+        "HDFC": {
+            bsb: "082000",
+            account_number: "123456789"
+        },
+
+        "AXIS": {
+            bsb: "013006",
+            account_number: "123456789"
+        }
+    };
+
+    document.getElementById('bank_name').addEventListener('change', function () {
+
+        const bank = this.value;
+
+        const bsbInput = document.getElementById('bsb');
+        const accountInput = document.getElementById('account_number');
+
+        if (bankDetails[bank]) {
+
+            bsbInput.value = bankDetails[bank].bsb;
+            accountInput.value = bankDetails[bank].account_number;
+
+        } else {
+
+            bsbInput.value = '';
+            accountInput.value = '';
+        }
+    });
+</script>
+
+
 </body>
 
 </html>

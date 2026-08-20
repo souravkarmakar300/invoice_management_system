@@ -8,11 +8,13 @@
     @php($isPdf = $isPdf ?? false)
     @unless ($isPdf)
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     @endunless
     <style>
         @if ($isPdf)
             @page {
-                margin: 8mm;
+                margin: 4mm;
                 size: A4 portrait;
             }
 
@@ -78,13 +80,96 @@
 
             .status-badge {
                 padding: 4px 10px;
-                font-size: 10px;
+                font-size: 20px;
             }
 
             .company-logo {
-                width: 150px;
+                width: 200px;
                 height: 100px;
                 padding: 4px;
+            }
+            .mb-1{
+                margin-bottom: 1px; !important;
+            }
+
+.contact-line {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0 0 2px 0 !important;
+    padding: 0;
+    line-height: 1.1;
+}
+
+.contact-line:last-child {
+    margin-bottom: 0 !important;
+}
+
+.contact-icon {
+    width: 12px;
+    height: 12px;
+    object-fit: contain;
+    flex: 0 0 12px;
+}
+
+
+
+
+
+
+.payment-history-footer {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+}
+
+.payment-history {
+    width: 30%;
+    margin-left: auto;
+    margin-right: 0;
+}
+
+.payment-history-title {
+    text-align: center;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.payment-history-row {
+    display: flex;
+    text-align: right;
+    justify-content: flex-end;
+    gap: 8px;
+    line-height: 1.6;
+}
+
+.payment-label {
+    min-width: 90px;
+    text-align: left;
+}
+
+.payment-date {
+    min-width: 90px;
+    text-align: left;
+}
+
+.payment-amount {
+    min-width: 80px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+
+
+
+
+
+            .payment-info {
+                margin-bottom: 3px;
+                line-height: 1.35;
+            }
+
+            .payment-info:last-child {
+                margin-bottom: 0;
             }
 
             .label {
@@ -111,10 +196,28 @@
 
             .summary {
                 padding: 12px;
+                background: #f8fafc;
+                border-radius: 8px;
+            }
+
+            .summary-item {
+                overflow: hidden;
+                padding: 5px 0;
+                font-size: 11px;
+            }
+
+            .summary-item span:first-child {
+                float: left;
+                color: #6b7280;
+            }
+
+            .summary-item span:last-child {
+                float: right;
+                font-weight: 700;
             }
 
             .grand-total {
-                font-size: 16px;
+                font-size: 12px;
                 padding: 10px 12px;
             }
 
@@ -167,10 +270,6 @@
 
             .text-center {
                 text-align: center;
-            }
-
-            .mb-1 {
-                margin-bottom: 4px;
             }
 
             .mb-2 {
@@ -267,6 +366,10 @@
                 background: #16a34a;
             }
 
+            .badge-partial {
+                background: #f59e0b;
+            }
+
             .badge-pending {
                 background: #dc2626;
             }
@@ -277,6 +380,10 @@
 
             .text-success {
                 color: #16a34a;
+            }
+
+            .text-danger {
+                color: #dc2626;
             }
 
             .float-end {
@@ -405,7 +512,7 @@
 
                 border-radius: 12px;
 
-                font-size: 22px;
+                font-size: 18px;
                 font-weight: 700;
             }
 
@@ -417,8 +524,8 @@
                 background: #2563eb;
                 color: white;
                 border-radius: 10px;
-                padding: 15px 20px;
-                font-size: 24px;
+                /* padding: 15px 20px; */
+                font-size: 18px;
                 font-weight: bold;
             }
 
@@ -471,7 +578,7 @@
             .company-header-flex {
                 display: flex;
                 align-items: center;
-                gap: 1rem;
+                gap: 6px; /* small gap */
             }
 
             @media print {
@@ -548,7 +655,7 @@
                 padding: 8px 18px;
                 border-radius: 50px;
                 color: #fff;
-                font-size: 13px;
+                font-size: 20px;
                 font-weight: 700;
                 letter-spacing: 1px;
             }
@@ -707,13 +814,96 @@
             <a href="{{ route('invoices.download', $invoice) }}" class="btn btn-success btn-sm">
                 <i class="bi bi-file-earmark-pdf"></i> Download PDF
             </a>
-            <button type="button" class="btn btn-sm btn-success" style="background:#25D366;border-color:#25D366;"
+
+            @if(auth()->user()->isSuperAdmin())
+               @if ($invoice->due_amount > 0)
+                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                        <i class="bi bi-cash-coin"></i> Record Payment
+                    </button>
+                @endif
+            @endif
+            
+            {{-- <button type="button" class="btn btn-sm btn-success" style="background:#25D366;border-color:#25D366;"
                 data-bs-toggle="modal" data-bs-target="#whatsappModal">
                 <i class="bi bi-whatsapp"></i> Send WhatsApp
-            </button>
+            </button> --}}
             <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#emailModal">
                 <i class="bi bi-envelope-fill"></i> Send Email
             </button>
+        </div>
+
+        @if (session('success'))
+            <div class="alert alert-success mx-auto mt-3" style="max-width:950px;width:calc(100% - 24px);">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if (session('error'))
+            <div class="alert alert-danger mx-auto mt-3" style="max-width:950px;width:calc(100% - 24px);">
+                {{ session('error') }}
+            </div>
+        @endif
+        @if ($errors->any())
+            <div class="alert alert-danger mx-auto mt-3" style="max-width:950px;width:calc(100% - 24px);">
+                {{ $errors->first() }}
+            </div>
+        @endif
+
+        {{-- ===== RECORD PAYMENT MODAL ===== --}}
+        <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered mx-3 mx-sm-auto" style="max-width:520px;">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header" style="background:#0f172a;color:#fff;">
+                        <h5 class="modal-title fw-bold" id="paymentModalLabel">
+                            <i class="bi bi-cash-coin me-2"></i>Record Payment
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="POST" action="{{ route('invoices.payments.store', $invoice) }}">
+                        @csrf
+                        <div class="modal-body">
+                            <div class="d-flex justify-content-between small mb-3 p-2 rounded" style="background:#f8fafc;">
+                                <span>Invoice Total: <strong>${{ number_format($invoice->total, 2) }}</strong></span>
+                                <span>Paid: <strong class="text-success">${{ number_format($invoice->total_paid, 2) }}</strong></span>
+                                <span>Due: <strong class="text-danger">${{ number_format($invoice->due_amount, 2) }}</strong></span>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Amount</label>
+                                <input type="number" name="amount" class="form-control" min="0.01"
+                                    max="{{ $invoice->due_amount }}" step="0.01"
+                                    value="{{ old('amount', number_format($invoice->due_amount, 2, '.', '')) }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Payment Date & Time</label>
+                                <input type="datetime-local" name="paid_at" class="form-control"
+                                    value="{{ old('paid_at', now()->format('Y-m-d\\TH:i')) }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Payment Method</label>
+                                <select name="payment_method" class="form-select" required>
+                                    @foreach (['Bank Transfer', 'Cash', 'Card', 'PayPal'] as $method)
+                                        <option value="{{ $method }}" {{ old('payment_method', $invoice->payment_method) === $method ? 'selected' : '' }}>
+                                            {{ $method }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Reference Number</label>
+                                <input type="text" name="reference_number" class="form-control"
+                                    value="{{ old('reference_number') }}" placeholder="Txn / cheque / receipt no.">
+                            </div>
+                            <div class="mb-0">
+                                <label class="form-label fw-semibold">Notes</label>
+                                <textarea name="notes" class="form-control" rows="2" placeholder="Optional notes">{{ old('notes') }}</textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-warning fw-semibold px-4">Save Payment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
 
         {{-- ===== WHATSAPP MODAL ===== --}}
@@ -933,29 +1123,44 @@
                         @endif
 
                         <div>
-                            <h2 class="company-name mb-1">WEBZONE EXPERTZ</h2>
+    <h2 class="company-name mb-1">WEBZONE EXPERTZ</h2>
 
-                            <p class="company-info mb-1">
-                                <i class="fas fa-map-marker-alt me-2 text-primary"></i>
-                                21 Graeme St, Mooroopna VIC 3629
-                            </p>
+    <p class="company-info mb-1">
+        {{-- <i class="fas fa-map-marker-alt me-2 text-primary"></i> --}}
+        <span>21 Graeme St, Mooroopna VIC 3629</span>
+    </p>
 
-                            <p class="company-info mb-1">
-                                <i class="fas fa-id-card me-2 text-primary"></i>
-                                ABN: 73 478 018 645
-                            </p>
+    <p class="company-info mb-1">
+        {{-- <i class="fas fa-id-card me-2 text-primary"></i> --}}
+        <span>ABN: 73 478 018 645</span>
+    </p>
 
-                            <p class="company-info mb-1">
-                                <i class="fas fa-phone me-2 text-primary"></i>
-                                0483915095
-                            </p>
+    {{-- Call --}}
+    <p class="company-info mb-1 contact-line">
+        @if ($isPdf)
+            <img src="{{ public_path('images/call_img.jpg') }}"
+                 class="contact-icon"
+                 alt="Call">
+        @else
+            <i class="fas fa-phone contact-icon"></i>
+        @endif
 
-                            <p class="company-info mb-0">
-                                <i class="fas fa-envelope me-2 text-primary"></i>
-                                {{ $invoice->author_mail }}
-                            </p>
+        <span>61488835849</span>
+    </p>
 
-                        </div>
+    {{-- WhatsApp --}}
+    <p class="company-info mb-1 contact-line">
+        @if ($isPdf)
+            <img src="{{ public_path('images/whatsapp img.jpg') }}"
+                 class="contact-icon"
+                 alt="WhatsApp">
+        @else
+            <i class="fab fa-whatsapp contact-icon whatsapp-icon"></i>
+        @endif
+
+        <span>0483915095</span
+    </p>
+</div>
 
                     </div>
 
@@ -977,22 +1182,11 @@
                             <strong>Invoice Date :</strong>
                             {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('d M Y') }}
                         </div>
-                        <span class="status-badge {{ $invoice->balance_due <= 0 ? 'badge-paid' : 'badge-pending' }}">
-                            {{ $invoice->balance_due <= 0 ? 'PAID' : 'DUE' }}
+                        <span class="status-badge {{ $invoice->paymentStatusBadgeClass() }}">
+                            {{ strtoupper($invoice->paymentStatusLabel()) }}
                         </span>
 
-                        {{-- @if ($invoice->status === 'draft')
-                        <span class="status-badge badge-draft ms-2">
-                            DRAFT
-                        </span>
-                    @endif --}}
                     </div>
-
-
-                    {{-- <div class="invoice-date">
-                    <strong>Due :</strong>
-                    {{ \Carbon\Carbon::parse($invoice->due_date)->format('d M Y') }}
-                </div> --}}
 
                 </div>
 
@@ -1001,7 +1195,7 @@
 
         <div class="section">
             <div class="row g-3 g-md-4">
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-sm-6 col-md-4">
                     <div class="card-box">
                         <div class="label">Bill To</div>
                         <h3>{{ $invoice->company_name }}</h3>
@@ -1017,68 +1211,174 @@
                         @endif
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-md-3">
+                <div class="col-12 col-sm-6 col-md-4">
                     <div class="card-box">
 
-                        <div class="label">Reference Code</div>
-                        <div>{{ $invoice->reference_code ?? 'N/A' }}</div>
+                        <div class="label">Invoice Author Name</div>
+                        <div>{{ $invoice->author_name ?? 'N/A' }}</div>
 
-                        <div class="label mt-2">Customer Code</div>
-                        <div>{{ $invoice->customer_code ?? 'N/A' }}</div>
+                        <div class="label mt-2">Invoice Author mail</div>
+                        <div>{{ $invoice->author_mail }}</div>
 
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-md-3">
+                <div class="col-12 col-sm-6 col-md-4">
                     <div class="card-box">
-                        <div class="label">Payment</div>
-                        {{ $invoice->payment_method }}<br>
-                        @if ($invoice->bank_name)
-                            {{ $invoice->bank_name }}<br>
-                        @endif
-                        @if ($invoice->account_number)
-                            Account: {{ $invoice->account_number }}<br>
-                        @endif
-                        @if ($invoice->bsb)
-                            BSB: {{ $invoice->bsb }}
-                        @endif
+                <div class="label">Payment</div>
+
+                @if ($invoice->bank_name)
+                    <div class="payment-info">
+                        Bank Name: {{ $invoice->bank_name }}
                     </div>
+                @endif
+
+                <div class="payment-info">
+                    A/C Name: Webzone Expertz
+                </div>
+
+                @if ($invoice->account_number)
+                    <div class="payment-info">
+                        Account: {{ $invoice->account_number }}
+                    </div>
+                @endif
+
+                @if ($invoice->bsb)
+                    <div class="payment-info">
+                        BSB: {{ $invoice->bsb }}
+                    </div>
+                @endif
+            </div>
                 </div>
             </div>
         </div>
 
         <div class="section pt-0">
-            <div class="table-responsive-invoice">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Description</th>
-                            <th class="text-center">Qty</th>
-                            <th class="text-end">Price</th>
-                            <th class="text-end">Tax</th>
-                            <th class="text-end">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($invoice->items as $index => $item)
-                            <tr>
-                                <td>{{ $index + 1 }}</td>
-                                <td>
-                                    {{ $item->product }}
-                                    @if ($item->description)
-                                        <br><small class="text-muted">{{ $item->description }}</small>
-                                    @endif
-                                </td>
-                                <td class="text-center">{{ number_format($item->qty, 2) }}</td>
-                                <td class="text-end">${{ number_format($item->unit_price, 2) }}</td>
-                                <td class="text-end">{{ number_format($item->tax, 2) }}%</td>
-                                <td class="text-end">${{ number_format($item->amount, 2) }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <div class="table-responsive-invoice">
+  <table class="table">
+
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Description</th>
+            <th class="text-center">Qty</th>
+            <th class="text-end">Price</th>
+            <th class="text-end">Total</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach ($invoice->items as $index => $item)
+            <tr>
+                <td>{{ $index + 1 }}</td>
+
+                <td>
+                    {{ $item->product }}
+
+                    @if ($item->description)
+                        <br>
+                        <small>
+                            {{ $item->description }}
+                        </small>
+                    @endif
+                </td>
+
+                <td class="text-center">
+                    {{ number_format($item->qty, 2) }}
+                </td>
+
+                <td class="text-end">
+                    ${{ number_format($item->unit_price, 2) }}
+                </td>
+
+                <td class="text-end">
+                    ${{ number_format($item->amount, 2) }}
+                </td>
+            </tr>
+        @endforeach
+    </tbody>
+
+    <tfoot>
+
+        <tr>
+            <td colspan="4" class="text-end">
+                <strong>Total Amount (Project Cost)</strong>
+            </td>
+
+            <td class="text-end">
+                <strong>
+                    ${{ number_format($invoice->total, 2) }}
+                </strong>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="4" class="text-end">
+                Total Paid
+            </td>
+
+            <td class="text-end">
+                ${{ number_format($invoice->payments->sum('amount'), 2) }}
+            </td>
+        </tr>
+
+        {{-- Payment History --}}
+        <tr>
+            <td colspan="3"></td>
+
+            <td colspan="2" class="payment-history-cell">
+
+                <div class="payment-history-title">
+                    Payment History
+                </div>
+
+                @forelse (
+                    $invoice->payments
+                        ->sortBy('paid_at')
+                        ->values()
+                    as $index => $payment
+                )
+
+                    <div class="payment-history-row">
+
+                        <span class="payment-label">
+                            @if ($index == 0)
+                                1st
+                            @elseif ($index == 1)
+                                2nd
+                            @elseif ($index == 2)
+                                3rd
+                            @else
+                                {{ $index + 1 }}th
+                            @endif
+                            Payment
+                        </span>
+
+                        <span class="payment-date">
+                            {{ $payment->paid_at?->format('d M Y') ?? '—' }}
+                        </span>
+
+                        <strong class="payment-amount">
+                            ${{ number_format($payment->amount, 2) }}
+                        </strong>
+
+                    </div>
+
+                @empty
+
+                    <div class="payment-empty">
+                        No payment recorded
+                    </div>
+
+                @endforelse
+
+            </td>
+        </tr>
+
+    </tfoot>
+
+</table>
+    </div>
+</div>
 
         <div class="section pt-0">
             <div class="row justify-content-end">
@@ -1092,36 +1392,41 @@
 
                         <div class="summary-item">
                             <span>Tax</span>
-                            <span>${{ number_format($invoice->tax_total, 2) }}</span>
+                            <span>+${{ number_format($invoice->tax_total, 2) }}</span>
                         </div>
 
-                        @if ($invoice->paid_amount > 0)
-                            <div class="summary-item">
-                                <span>Paid</span>
-                                <span class="text-success">
-                                    -${{ number_format($invoice->paid_amount, 2) }}
-                                </span>
-                            </div>
-                        @endif
+                        <div class="summary-item">
+                            <span>Invoice Total</span>
+                            <span>${{ number_format($invoice->total, 2) }}</span>
+                        </div>
 
-                        <hr>
+                        <div class="summary-item">
+                            <span>Paid</span>
+                            <span class="text-success">${{ number_format($invoice->total_paid, 2) }}</span>
+                        </div>
+
+                        <div class="summary-item">
+                            <span>Due</span>
+                            <span class="text-danger">${{ number_format($invoice->due_amount, 2) }}</span>
+                        </div>
+
+                        <div class="summary-item">
+                            <span>Payment Status</span>
+                            <span>{{ $invoice->paymentStatusLabel() }}</span>
+                        </div>
+
+                        <div class="summary-item">
+                            <span>Last Paid Amount</span>
+                            <span>${{ number_format(optional($invoice->payments->first())->amount ?? 0, 2) }}</span>
+                        </div>
 
                         <div class="grand-total">
-                            <span>
-                                @if ($invoice->balance_due > 0 && $invoice->paid_amount > 0)
-                                    BALANCE DUE
-                                @else
-                                    TOTAL
-                                @endif
-                            </span>
-
+                            <span>{{ $invoice->due_amount > 0 ? 'REMAINING BALANCE' : 'TOTAL PAID' }}</span>
                             <span>
                                 $
-                                @if ($invoice->balance_due > 0 && $invoice->paid_amount > 0)
-                                    {{ number_format($invoice->balance_due, 2) }}
-                                @else
-                                    {{ number_format($invoice->total, 2) }}
-                                @endif
+                                {{ $invoice->due_amount > 0
+                                    ? number_format($invoice->due_amount, 2)
+                                    : number_format($invoice->total, 2) }}
                             </span>
                         </div>
 
@@ -1129,6 +1434,58 @@
                 </div>
             </div>
         </div>
+
+        @unless ($isPdf)
+            <div class="section pt-0 no-print">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <h5 class="mb-0 fw-bold">Payment History</h5>
+                    @if(auth()->user()->isSuperAdmin())
+                        @if ($invoice->due_amount > 0)
+                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                            <i class="bi bi-plus-lg"></i> Record Payment
+                        </button>
+                    @endif
+                    @endif
+                    
+                </div>
+                <div class="table-responsive-invoice">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Date & Time</th>
+                                <th>Method</th>
+                                <th>Reference</th>
+                                <th>Notes</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($invoice->payments as $index => $payment)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>{{ $payment->paid_at?->format('d M Y, h:i A') ?? '—' }}</td>
+                                    <td>{{ $payment->payment_method }}</td>
+                                    <td>{{ $payment->reference_number ?: '—' }}</td>
+                                    <td>{{ $payment->notes ?: '—' }}</td>
+                                    <td class="text-end">${{ number_format($payment->amount, 2) }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No payments recorded yet.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <div class="small text-muted">
+                    Invoice Total ${{ number_format($invoice->total, 2) }}
+                    &nbsp;|&nbsp; Paid ${{ number_format($invoice->total_paid, 2) }}
+                    &nbsp;|&nbsp; Due ${{ number_format($invoice->due_amount, 2) }}
+                    &nbsp;|&nbsp; Status: {{ $invoice->paymentStatusLabel() }}
+                </div>
+            </div>
+        @endunless
 
         <div class="footer">
             <strong>Thank You!</strong><br>

@@ -11,13 +11,12 @@ class Invoice extends Model
     protected $fillable = [
         'user_id',
         'invoice_no',
+        'author_name',
         'author_mail',
         'invoice_date',
         'due_date',
-        'reference_code',
         'company_name',
         'customer_name',
-        'customer_code',
         'email',
         'phone',
         'address',
@@ -57,6 +56,72 @@ class Invoice extends Model
     public function items(): HasMany
     {
         return $this->hasMany(InvoiceItem::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(InvoicePayment::class)->orderByDesc('paid_at')->orderByDesc('id');
+    }
+
+    public function getTotalPaidAttribute(): float
+    {
+        return round((float) ($this->attributes['paid_amount'] ?? 0), 2);
+    }
+
+    public function getDueAmountAttribute(): float
+    {
+        return round((float) ($this->attributes['balance_due'] ?? 0), 2);
+    }
+
+    public function paymentStatusLabel(): string
+    {
+        $status = (string) ($this->payment_status ?: 'Due');
+
+        if ($status === 'Due' && $this->due_date && $this->due_date->lt(now()->startOfDay()) && $this->due_amount > 0) {
+            return 'Overdue';
+        }
+
+        return $status;
+    }
+
+    public function paymentStatusClass(): string
+    {
+        return match ($this->paymentStatusLabel()) {
+            'Paid' => 'status-paid',
+            'Partial' => 'status-partial',
+            'Overdue' => 'status-overdue',
+            default => 'status-due',
+        };
+    }
+
+    public function paymentStatusBadgeClass(): string
+    {
+        return match ($this->paymentStatusLabel()) {
+            'Paid' => 'badge-paid',
+            'Partial' => 'badge-partial',
+            default => 'badge-pending',
+        };
+    }
+
+    public function recalculatePayments(): void
+    {
+        $totalPaid = round((float) $this->payments()->reorder()->sum('amount'), 2);
+        $invoiceTotal = round((float) $this->total, 2);
+        $dueAmount = round(max($invoiceTotal - $totalPaid, 0), 2);
+
+        if ($invoiceTotal > 0 && $dueAmount <= 0) {
+            $status = 'Paid';
+        } elseif ($totalPaid > 0) {
+            $status = 'Partial';
+        } else {
+            $status = 'Due';
+        }
+
+        $this->forceFill([
+            'paid_amount' => $totalPaid,
+            'balance_due' => $dueAmount,
+            'payment_status' => $status,
+        ])->save();
     }
 
     public static function generateInvoiceNo(): string

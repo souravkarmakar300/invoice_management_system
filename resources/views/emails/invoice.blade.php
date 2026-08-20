@@ -17,7 +17,8 @@
         .info-box td:first-child { color:#6b7280; width:140px; font-weight:600; }
         .badge { display:inline-block; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; color:#fff; }
         .badge-paid { background:#16a34a; }
-        .badge-due  { background:#dc2626; }
+        .badge-partial { background:#f59e0b; }
+        .badge-pending { background:#dc2626; }
         .btn { display:inline-block; background:#2563eb; color:#fff; padding:12px 28px; border-radius:8px; text-decoration:none; font-weight:600; font-size:15px; margin-top:8px; }
         .footer { background:#0f172a; color:#94a3b8; text-align:center; padding:20px 24px; font-size:13px; }
         .footer a { color:#60a5fa; text-decoration:none; }
@@ -54,14 +55,22 @@
                 </tr>
                 @endif
                 <tr>
-                    <td>Amount</td>
+                    <td>Total</td>
                     <td><strong>${{ number_format($invoice->total, 2) }}</strong></td>
+                </tr>
+                <tr>
+                    <td>Paid</td>
+                    <td>${{ number_format($invoice->total_paid, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>Due</td>
+                    <td>${{ number_format($invoice->due_amount, 2) }}</td>
                 </tr>
                 <tr>
                     <td>Status</td>
                     <td>
-                        <span class="badge {{ $invoice->balance_due <= 0 ? 'badge-paid' : 'badge-due' }}">
-                            {{ $invoice->balance_due <= 0 ? 'PAID' : 'DUE' }}
+                        <span class="badge {{ $invoice->paymentStatusBadgeClass() }}">
+                            {{ strtoupper($invoice->paymentStatusLabel()) }}
                         </span>
                     </td>
                 </tr>

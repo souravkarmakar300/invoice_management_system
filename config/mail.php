@@ -113,4 +113,6 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    'invoice_cc_email' => env('INVOICE_CC_EMAIL'),
+
 ];

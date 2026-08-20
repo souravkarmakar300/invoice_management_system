@@ -222,6 +222,13 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Author Name<span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="author_name" required
+                                value="{{ old('author_name', $invoice?->author_name) }}">
+                        </div>
+
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Author Email<span class="text-danger">*</span></label>
                             <input type="email" class="form-control" name="author_mail" required
@@ -237,7 +244,7 @@
                             <input type="date" class="form-control" name="due_date"
                                 value="{{ old('due_date', $invoice?->due_date?->format('Y-m-d') ?? now()->addDays(7)->format('Y-m-d')) }}">
                         </div>
-                        <div class="col-md-4 mb-3">
+                        {{-- <div class="col-md-4 mb-3">
                             <label class="form-label">Reference Code</label>
                             <input type="text" class="form-control" name="reference_code"
                                 value="{{ old('reference_code', $invoice?->reference_code) }}">
@@ -246,7 +253,7 @@
                             <label class="form-label">Customer Code</label>
                             <input type="text" class="form-control" name="customer_code"
                                 value="{{ old('customer_code', $invoice?->customer_code) }}">
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
             </div>
@@ -319,25 +326,16 @@
                             <select class="form-select" name="bank_name" id="bank_name">
                                 <option value="">Select Bank</option>
 
-                                <option value="SBI"
-                                    {{ old('bank_name', $invoice?->bank_name) == 'SBI' ? 'selected' : '' }}>
-                                    SBI
+                                <option value="Westpac"
+                                    {{ old('bank_name', $invoice?->bank_name) == 'Westpac' ? 'selected' : '' }}>
+                                    Westpac
                                 </option>
 
-                                <option value="PNB"
-                                    {{ old('bank_name', $invoice?->bank_name) == 'PNB' ? 'selected' : '' }}>
-                                    PNB
+                                <option value="Wise"
+                                    {{ old('bank_name', $invoice?->bank_name) == 'Wise' ? 'selected' : '' }}>  
+                                    Wise
                                 </option>
 
-                                <option value="HDFC"
-                                    {{ old('bank_name', $invoice?->bank_name) == 'HDFC' ? 'selected' : '' }}>
-                                    HDFC
-                                </option>
-
-                                <option value="AXIS"
-                                    {{ old('bank_name', $invoice?->bank_name) == 'AXIS' ? 'selected' : '' }}>
-                                    AXIS
-                                </option>
                             </select>
                         </div>
 
@@ -526,7 +524,15 @@
                         <label class="form-label">Paid</label>
                         <input class="form-control text-end"
                             name="paid_amount"
-                            id="paid_amount">
+                            id="paid_amount"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value="{{ old('paid_amount', $invoice?->paid_amount ?? '0.00') }}"
+                            {{ $invoice ? 'readonly' : '' }}>
+                        @if ($invoice)
+                            <div class="form-text">Use Record Payment on the invoice page for extra payments.</div>
+                        @endif
                     </div>
             
                     <div class="col-md-2">
@@ -583,7 +589,12 @@
             const total = subtotal + taxTotal;
             const paid = parseFloat(document.getElementById('paid_amount').value) || 0;
             const balance = Math.max(total - paid, 0);
-            const paymentStatus = total > 0 && paid >= total ? 'Paid' : 'Due';
+            let paymentStatus = 'Due';
+            if (total > 0 && paid >= total) {
+                paymentStatus = 'Paid';
+            } else if (paid > 0) {
+                paymentStatus = 'Partial';
+            }
 
             document.getElementById('subtotal').value = formatMoney(subtotal);
             document.getElementById('tax_total').value = formatMoney(taxTotal);
@@ -627,25 +638,16 @@
 
 <script>
     const bankDetails = {
-        "SBI": {
-            bsb: "123456",
-            account_number: "1234567890"
+        "Westpac": {
+            bsb: "033254",
+            account_number: "777099"
         },
 
-        "PNB": {
-            bsb: "062000",
-            account_number: "123456789"
+        "Wise": {
+            bsb: "774001",
+            account_number: "240526241"
         },
 
-        "HDFC": {
-            bsb: "082000",
-            account_number: "123456789"
-        },
-
-        "AXIS": {
-            bsb: "013006",
-            account_number: "123456789"
-        }
     };
 
     document.getElementById('bank_name').addEventListener('change', function () {

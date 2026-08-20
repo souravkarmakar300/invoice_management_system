@@ -243,6 +243,10 @@
             overflow: hidden;
         }
 
+        .table-compact {
+            font-size: .86rem;
+        }
+
         #invoiceTable {
             margin: 0;
         }
@@ -256,12 +260,12 @@
             font-weight: 600;
             border: 0;
             white-space: nowrap;
-            padding: .9rem .75rem;
+            padding: .62rem .55rem;
         }
 
         #invoiceTable tbody td {
             border-color: #eef2f7;
-            padding: .9rem .75rem;
+            padding: .38rem .30rem;
             vertical-align: middle;
         }
 
@@ -296,6 +300,11 @@
         .status-paid {
             background: #dcfce7;
             color: #166534;
+        }
+
+        .status-partial {
+            background: #ffedd5;
+            color: #c2410c;
         }
 
         .status-due {
@@ -392,6 +401,21 @@
             .stat-value {
                 font-size: 1.55rem;
             }
+
+            #invoiceTable thead th {
+                font-size: .72rem;
+                padding: .55rem .45rem;
+            }
+
+            #invoiceTable tbody td {
+                padding: .38rem .30rem;
+                font-size: .8rem;
+            }
+
+            .action-group .btn {
+                width: 30px;
+                height: 30px;
+            }
         }
 
         @media (max-width: 991.98px) {
@@ -420,6 +444,17 @@
 
             .filter-actions .btn {
                 flex: 1 1 auto;
+            }
+
+            .desktop-table .table-responsive {
+                overflow-x: auto;
+            }
+
+            #invoiceTable th:nth-child(5),
+            #invoiceTable td:nth-child(5),
+            #invoiceTable th:nth-child(6),
+            #invoiceTable td:nth-child(6) {
+                display: none;
             }
         }
 
@@ -481,6 +516,10 @@
 
             .panel-head h5 {
                 font-size: 1rem;
+            }
+
+            .filter-actions .btn {
+                width: 100%;
             }
 
             .pagination {
@@ -678,7 +717,8 @@
                                 <option value="all" {{ $paymentFilter === 'all' ? 'selected' : '' }}>All Status
                                 </option>
                                 <option value="paid" {{ $paymentFilter === 'paid' ? 'selected' : '' }}>Paid</option>
-                                <option value="due" {{ $paymentFilter === 'due' ? 'selected' : '' }}>Due</option>
+                                <option value="partial" {{ $paymentFilter === 'partial' ? 'selected' : '' }}>Due</option>
+                                {{-- <option value="due" {{ $paymentFilter === 'due' ? 'selected' : '' }}>Due</option> --}}
                             </select>
                         </div>
                         <div class="col-12 col-md-6 col-lg-4 d-flex flex-wrap gap-2 filter-actions">
@@ -695,7 +735,7 @@
                 </form>
 
                 <div class="table-responsive table-wrap desktop-table">
-                    <table class="table table-hover align-middle mb-0" id="invoiceTable">
+                    <table class="table table-sm table-hover align-middle mb-0 table-compact" id="invoiceTable">
                         <thead>
                             <tr>
                                 <th>SL.</th>
@@ -705,27 +745,14 @@
                                 <th>Email</th>
                                 <th>Author</th>
                                 <th>Payment</th>
-                                <th class="text-end">Amount</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-end">Paid</th>
+                                <th class="text-end">Due</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($invoices as $invoice)
-                                @php
-                                    $today = \Carbon\Carbon::today();
-                                    $dueDate = $invoice->due_date ? \Carbon\Carbon::parse($invoice->due_date) : null;
-
-                                    if ($invoice->balance_due <= 0) {
-                                        $paymentStatus = 'Paid';
-                                        $paymentClass = 'status-paid';
-                                    } elseif ($dueDate && $today->gt($dueDate)) {
-                                        $paymentStatus = 'Overdue';
-                                        $paymentClass = 'status-overdue';
-                                    } else {
-                                        $paymentStatus = 'Due';
-                                        $paymentClass = 'status-due';
-                                    }
-                                @endphp
                                 <tr>
                                     <td class="muted-cell">{{ $invoices->firstItem() + $loop->index }}</td>
                                     <td>
@@ -739,12 +766,14 @@
                                     <td class="muted-cell">{{ $invoice->email ?? '—' }}</td>
                                     <td class="muted-cell">{{ $invoice->author_mail ?? '—' }}</td>
                                     <td>
-                                        <span class="status-badge {{ $paymentClass }}">
+                                        <span class="status-badge {{ $invoice->paymentStatusClass() }}">
                                             <i class="bi bi-circle-fill" style="font-size:.45rem"></i>
-                                            {{ $paymentStatus }}
+                                            {{ $invoice->paymentStatusLabel() === 'Partial' ? 'Due' : $invoice->paymentStatusLabel() }}
                                         </span>
                                     </td>
                                     <td class="text-end fw-semibold">${{ number_format($invoice->total, 2) }}</td>
+                                    <td class="text-end text-success">${{ number_format($invoice->total_paid, 2) }}</td>
+                                    <td class="text-end text-danger">${{ number_format($invoice->due_amount, 2) }}</td>
                                     <td>
                                         <div class="action-group">
                                             <a href="{{ route('invoices.show', $invoice) }}"
@@ -775,7 +804,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9">
+                                    <td colspan="11">
                                         <div class="empty-state">
                                             <i class="bi bi-inbox d-block mb-2"></i>
                                             <div class="fw-semibold text-dark mb-1">No invoices found</div>
@@ -794,21 +823,6 @@
 
                 <div class="mobile-invoice-list">
                     @forelse($invoices as $invoice)
-                        @php
-                            $today = \Carbon\Carbon::today();
-                            $dueDate = $invoice->due_date ? \Carbon\Carbon::parse($invoice->due_date) : null;
-
-                            if ($invoice->balance_due <= 0) {
-                                $paymentStatus = 'Paid';
-                                $paymentClass = 'status-paid';
-                            } elseif ($dueDate && $today->gt($dueDate)) {
-                                $paymentStatus = 'Overdue';
-                                $paymentClass = 'status-overdue';
-                            } else {
-                                $paymentStatus = 'Due';
-                                $paymentClass = 'status-due';
-                            }
-                        @endphp
                         <div class="invoice-mobile-card">
                             <div class="meta-row">
                                 <div>
@@ -818,7 +832,7 @@
                                         {{ $invoice->invoice_date?->format('d M Y') ?? '—' }}</div>
                                 </div>
                                 <div class="text-end">
-                                    <span class="status-badge {{ $paymentClass }}">{{ $paymentStatus }}</span>
+                                    <span class="status-badge {{ $invoice->paymentStatusClass() }}">{{ $invoice->paymentStatusLabel() }}</span>
                                     <div class="fw-bold mt-1">${{ number_format($invoice->total, 2) }}</div>
                                 </div>
                             </div>
@@ -835,6 +849,11 @@
                             <div class="muted-cell mb-2">
                                 <div>{{ $invoice->email ?? '—' }}</div>
                                 <div>{{ $invoice->author_mail ?? '—' }}</div>
+                                <div class="mt-1">
+                                    Total ${{ number_format($invoice->total, 2) }}
+                                    &nbsp;|&nbsp; Paid ${{ number_format($invoice->total_paid, 2) }}
+                                    &nbsp;|&nbsp; Due ${{ number_format($invoice->due_amount, 2) }}
+                                </div>
                             </div>
                             <div class="action-group">
                                 <a href="{{ route('invoices.show', $invoice) }}"

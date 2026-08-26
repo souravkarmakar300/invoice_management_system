@@ -33,6 +33,14 @@
             min-height: 100vh;
             font-family: 'DM Sans', sans-serif;
             color: var(--ink);
+
+
+             user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+
+
         }
 
         .topbar {
@@ -54,9 +62,10 @@
     text-decoration: none;
 }
 
-.logo-img{
-    width: 200px;
-    height: 80px;
+.logo-img {
+    width: 170px;
+    height: auto;
+    max-width: none;
     flex-shrink: 0;
 }
 
@@ -554,9 +563,11 @@
         align-items: center;   
     }     
 
-    .logo-img{
-        width: 34px;
-        height: 34px;
+    .logo-img {
+        width: 100px;
+        height: auto;
+        max-width: none;
+        flex-shrink: 0;
     }
 
     .brand-text{
@@ -572,6 +583,72 @@
         font-size: 16px;
     }
         }
+
+
+    /* Navigation Responsive */
+.website-switch-btn,
+.user-dropdown-btn {
+    white-space: nowrap;
+    min-height: 38px;
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+
+    .website-switch-btn {
+        padding: 6px 10px;
+        font-size: 14px;
+    }
+
+    .user-dropdown-btn {
+        padding: 6px 8px;
+        font-size: 14px;
+    }
+
+    .user-name {
+        max-width: 100px;
+        display: inline-block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+    }
+
+}
+
+/* Mobile */
+@media (max-width: 576px) {
+
+    .website-switch-btn {
+        padding: 6px 8px;
+        font-size: 13px;
+    }
+
+    .website-switch-btn .switch-text {
+        display: none;
+    }
+
+    .website-switch-btn .bi-grid {
+        margin-right: 0 !important;
+    }
+
+    .user-dropdown-btn {
+        padding: 6px 8px;
+        font-size: 13px;
+    }
+
+    .user-name {
+        max-width: 70px;
+    }
+
+    .ms-auto {
+        gap: 5px !important;
+    }
+
+    .dropdown-menu {
+        min-width: 180px;
+    }
+
+}    
     </style>
 </head>
 
@@ -582,10 +659,121 @@
                 <img src="{{ asset('images/logo.png') }}"
                     alt="Webzone Expertz"
                     class="logo-img">
-            
-                {{-- <span class="brand-text">WEBZONE EXPERTZ</span> --}}
             </a>
-            <div class="ms-auto">
+
+            <div class="ms-auto d-flex align-items-center gap-3">
+
+            {{-- Right Side Navigation --}}
+<div class="ms-auto d-flex align-items-center gap-2 flex-wrap">
+
+    {{-- Website Switcher --}}
+    <div class="dropdown">
+
+        <button
+            class="btn btn-outline-warning dropdown-toggle website-switch-btn"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false">
+
+            <i class="bi bi-grid me-1"></i>
+            <span class="switch-text">Switch Website</span>
+
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+
+            <li>
+                <a
+                    class="dropdown-item"
+                    href="https://salesinvoice.webzoneexpertz.com.au/">
+
+                    <i class="bi bi-cart me-2"></i>
+                    Sales
+
+                </a>
+            </li>
+
+            <li>
+                <a
+                    class="dropdown-item"
+                    href="https://admininvoice.webzoneexpertz.com.au/">
+
+                    <i class="bi bi-speedometer2 me-2"></i>
+                    Admin
+
+                </a>
+            </li>
+
+        </ul>
+
+    </div>
+
+
+    {{-- Existing User Dropdown --}}
+    <div class="dropdown">
+
+        <a
+            href="#"
+            class="user-chip dropdown-toggle user-dropdown-btn"
+            data-bs-toggle="dropdown"
+            aria-expanded="false">
+
+            <i class="bi bi-person-circle me-1"></i>
+
+            <span class="user-name">
+                {{ auth()->user()->name }}
+            </span>
+
+        </a>
+
+        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+
+            <li>
+                <span class="dropdown-item-text small text-muted">
+
+                    Role:
+
+                    <strong>
+                        {{ ucfirst(auth()->user()->role) }}
+                    </strong>
+
+                </span>
+            </li>
+
+            <li>
+                <hr class="dropdown-divider">
+            </li>
+
+            <li>
+
+                <form
+                    action="{{ route('logout') }}"
+                    method="POST">
+
+                    @csrf
+
+                    <button
+                        class="dropdown-item text-danger"
+                        type="submit">
+
+                        <i class="bi bi-box-arrow-right me-1"></i>
+                        Logout
+
+                    </button>
+
+                </form>
+
+            </li>
+
+        </ul>
+
+    </div>
+
+</div>
+
+
+
+            {{-- <div class="ms-auto">
                 <div class="dropdown">
                     <a href="#" class="user-chip dropdown-toggle" data-bs-toggle="dropdown">
                         <i class="bi bi-person-circle me-1"></i>
@@ -610,7 +798,7 @@
                         </li>
                     </ul>
                 </div>
-            </div>
+            </div> --}}
         </div>
     </nav>
 

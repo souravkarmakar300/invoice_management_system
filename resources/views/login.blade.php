@@ -17,6 +17,11 @@
             align-items: center;
             justify-content: center;
             font-family: Segoe UI, sans-serif;
+
+             user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .login-card {

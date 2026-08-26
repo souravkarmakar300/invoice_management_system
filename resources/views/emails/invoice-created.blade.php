@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Invoice Deleted</title>
+    <title>Invoice Created</title>
 </head>
 
 <body style="font-family: Arial, sans-serif; background:#f5f5f5; padding:30px;">
@@ -16,12 +16,12 @@
         border:1px solid #ddd;
     ">
 
-        <h2 style="color:#dc3545; margin-top:0;">
-            Invoice Deleted
+        <h2 style="color:#2563eb; margin-top:0;">
+            Invoice Created Successfully
         </h2>
 
         <p>
-            An invoice has been deleted from the Invoice Management System.
+            A new invoice has been created in the Invoice Management System.
         </p>
 
         <table width="100%" cellpadding="8" cellspacing="0"
@@ -32,7 +32,7 @@
                     <strong>Invoice ID / No.</strong>
                 </td>
                 <td style="border-bottom:1px solid #eee;">
-                    {{ $invoiceNo }}
+                    {{ $invoice->invoice_no }}
                 </td>
             </tr>
 
@@ -41,7 +41,7 @@
                     <strong>Customer Name</strong>
                 </td>
                 <td style="border-bottom:1px solid #eee;">
-                    {{ $customerName }}
+                    {{ $invoice->customer_name }}
                 </td>
             </tr>
 
@@ -50,16 +50,34 @@
                     <strong>Customer Email</strong>
                 </td>
                 <td style="border-bottom:1px solid #eee;">
-                    {{ $customerEmail }}
+                    {{ $invoice->email }}
+                </td>
+            </tr>
+
+            <tr>
+                <td style="border-bottom:1px solid #eee;">
+                    <strong>Company Name</strong>
+                </td>
+                <td style="border-bottom:1px solid #eee;">
+                    {{ $invoice->company_name }}
+                </td>
+            </tr>
+
+            <tr>
+                <td style="border-bottom:1px solid #eee;">
+                    <strong>Total Amount</strong>
+                </td>
+                <td style="border-bottom:1px solid #eee;">
+                    {{ number_format($invoice->total, 2) }}
                 </td>
             </tr>
 
             <tr>
                 <td>
-                    <strong>Company Name</strong>
+                    <strong>Status</strong>
                 </td>
                 <td>
-                    {{ $companyName }}
+                    {{ ucfirst($invoice->status) }}
                 </td>
             </tr>
 

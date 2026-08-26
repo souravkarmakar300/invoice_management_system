@@ -29,6 +29,11 @@
                 font-family: DejaVu Sans, sans-serif;
                 font-size: 11px;
                 line-height: 1.35;
+
+                 user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
             }
 
             .invoice {
@@ -194,10 +199,16 @@
                 color: #fff;
             }
 
-            .summary {
+            /* .summary {
                 padding: 12px;
                 background: #f8fafc;
                 border-radius: 8px;
+            } */
+
+            .summary {
+                background: transparent !important;
+                border: none !important;
+                padding: 0 !important;
             }
 
             .summary-item {
@@ -216,10 +227,47 @@
                 font-weight: 700;
             }
 
-            .grand-total {
+            /* .grand-total {
                 font-size: 12px;
                 padding: 10px 12px;
-            }
+            } */
+
+
+.grand-total {
+    background: #2563eb !important;
+    color: #fff !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 7px 10px !important;
+    margin: 0 !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+
+}
+
+.grand-total span:last-child {
+    font-size: 14px !important;
+}
+
+.payment-history-cell {
+    padding: 5px 8px !important;
+}
+
+.payment-history-title {
+    margin-bottom: 4px !important;
+    font-size: 11px !important;
+}
+
+.payment-history-row {
+    padding: 2px 0 !important;
+    font-size: 10px !important;
+}
+
+
+
 
             .footer {
                 padding: 12px;
@@ -313,10 +361,10 @@
                 display: none !important;
             }
 
-            .card-box {
+            /* .card-box {
                 background: #f8fafc;
                 border: 1px solid #e5e7eb;
-            }
+            } */
 
             .company-name {
                 color: #1e3a8a;
@@ -350,10 +398,11 @@
             }
 
             .grand-total {
-                background: #2563eb;
-                color: #fff;
+                background: #2563eb !important;
+                color: #fff !important;
                 border-radius: 8px;
                 font-weight: bold;
+
             }
 
             .footer {
@@ -395,6 +444,117 @@
             .footer {
                 page-break-inside: avoid;
             }
+
+
+
+            /* Remove gap before Remaining Balance */
+.section.pt-0 {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.section.pt-0 .row {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.section.pt-0 .summary {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+.grand-total {
+    margin-top: 0 !important;
+}
+
+
+
+
+/* =========================
+   PDF FINAL SPACING FIX
+   ========================= */
+
+/* Remove space above Remaining Balance */
+.summary {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.summary-item {
+    margin-bottom: 0 !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+}
+
+/* Last item directly touches Remaining Balance */
+.summary-item:last-of-type {
+    padding-bottom: 2px !important;
+    margin-bottom: 0 !important;
+}
+
+/* Remaining Balance */
+.grand-total {
+    background: #2563eb !important;
+    color: #fff !important;
+    border-radius: 6px !important;
+
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+
+    text-align: center !important;
+
+    padding: 7px 10px !important;
+    margin: 0 !important;
+
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+}
+
+.grand-total span:last-child {
+    font-size: 14px !important;
+}
+
+
+
+/* REMOVE SPACE BEFORE REMAINING BALANCE */
+.section.pt-0 {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.section.pt-0 .row {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.section.pt-0 .col-12,
+.section.pt-0 .col-md-6 {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.section.pt-0 .summary {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.section.pt-0 .summary-item {
+    padding: 3px 0 !important;
+    margin: 0 !important;
+}
+
+.section.pt-0 .grand-total {
+    margin: 2px 0 0 0 !important;
+    padding: 7px 10px !important;
+}
+
+
+
+
         @else
             body {
                 background: #eef2f7;
@@ -402,6 +562,16 @@
                 margin: 0;
                 padding: 0 0 24px;
                 overflow-x: hidden;
+
+
+                 user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+
+
+
+
             }
 
             .invoice {
@@ -524,7 +694,7 @@
                 background: #2563eb;
                 color: white;
                 border-radius: 10px;
-                /* padding: 15px 20px; */
+                padding: 15px 20px;
                 font-size: 18px;
                 font-weight: bold;
             }
@@ -1236,17 +1406,18 @@
                     A/C Name: Webzone Expertz
                 </div>
 
+                @if ($invoice->bsb)
+                    <div class="payment-info">
+                        BSB: {{ $invoice->bsb }}
+                    </div>
+                @endif
+
                 @if ($invoice->account_number)
                     <div class="payment-info">
                         Account: {{ $invoice->account_number }}
                     </div>
                 @endif
 
-                @if ($invoice->bsb)
-                    <div class="payment-info">
-                        BSB: {{ $invoice->bsb }}
-                    </div>
-                @endif
             </div>
                 </div>
             </div>
@@ -1420,7 +1591,8 @@
                             <span>${{ number_format(optional($invoice->payments->first())->amount ?? 0, 2) }}</span>
                         </div>
 
-                        <div class="grand-total">
+                        <div class="grand-total" style="margin: 5px auto !important;
+                        display: table !important; width: 100% !important; ">
                             <span>{{ $invoice->due_amount > 0 ? 'REMAINING BALANCE' : 'TOTAL PAID' }}</span>
                             <span>
                                 $
@@ -1486,6 +1658,62 @@
                 </div>
             </div>
         @endunless
+
+        <div style="
+            font-size: 9px;
+            line-height: 1.4;
+            margin-top: 4px;
+            margin-bottom: 6px;
+            padding: 7px 10px;
+            border-left: 3px solid #2563eb;
+            background: #f8fafc;
+            color: #374151;
+        ">
+            <strong style="
+                display: block;
+                font-size: 10px;
+                color: #111827;
+                margin-bottom: 4px;
+            ">
+                Invoice Terms &amp; Conditions
+            </strong>
+
+            <ol style="
+                margin: 0;
+                padding-left: 18px;
+            ">
+                <li>
+                    <strong>Proposal Acceptance:</strong>
+                    Receipt of this invoice constitutes the Client’s acceptance and approval
+                    of the proposal, scope of work, terms, and invoiced amount.
+                </li>
+
+                <li>
+                    <strong>Payment Verification:</strong>
+                    The Client must verify the authenticity of <strong>Webzone Expertz</strong>
+                    and the invoice/payment details directly with us before making any payment.
+                </li>
+
+                <li>
+                    <strong>Non-Refundable:</strong>
+                    All payments made to <strong>Webzone Expertz are strictly non-refundable</strong>.
+                </li>
+
+                <li>
+                    <strong>Unauthorized Claims:</strong>
+                    If the Client receives any communication claiming that
+                    <strong>Webzone Expertz has closed, ceased operations, or been taken over</strong>,
+                    no payment should be made based on such information.
+                </li>
+
+                <li>
+                    <strong>Immediate Notification:</strong>
+                    Any such communication must be reported to
+                    <strong>Webzone Expertz immediately</strong>, and the Client should contact
+                    us directly for verification.
+                </li>
+            </ol>
+        </div>
 
         <div class="footer">
             <strong>Thank You!</strong><br>

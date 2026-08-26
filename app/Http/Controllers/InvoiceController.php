@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Mail\InvoiceDeletedMail;
+use App\Mail\InvoiceCreatedMail;
 
 class InvoiceController extends Controller
 {
@@ -109,7 +110,7 @@ class InvoiceController extends Controller
                 'Bank Name',
                 'Account Number',
                 'BSB',
-                // 'Notes',
+                'Notes',
                 'Created At',
             ]);
 
@@ -140,7 +141,7 @@ class InvoiceController extends Controller
                     $invoice->bank_name,
                     $invoice->account_number,
                     $invoice->bsb,
-                    // $invoice->notes,
+                    $invoice->notes,
                     optional($invoice->created_at)->format('Y-m-d H:i:s'),
                 ]);
             }
@@ -160,34 +161,89 @@ class InvoiceController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $data = $this->validated($request);
-        $totals = $this->calculateTotals($request);
+{
+    $data = $this->validated($request);
+    $totals = $this->calculateTotals($request);
 
-        $invoice = DB::transaction(function () use ($request, $data, $totals) {
-            $invoice = Invoice::create([
-                ...$data,
-                ...$totals,
-                'user_id' => auth()->id(),
-                'author_mail' => $request->input('author_mail'),
-                'invoice_no' => Invoice::generateInvoiceNo(),
-                'invoice_date' => $request->input('invoice_date', now()->toDateString()),
-                'due_date' => $request->input('due_date', now()->addDays(7)->toDateString()),
-                'status' => $request->input('action') === 'draft' ? 'draft' : 'generated',
-                // 'notes' => $request->input('notes'),
-            ]);
+    $invoice = DB::transaction(function () use ($request, $data, $totals) {
 
-            $this->syncItems($invoice, $request);
-            $this->syncInitialPayment($invoice, $request);
-            $invoice->recalculatePayments();
+        $invoice = Invoice::create([
+            ...$data,
+            ...$totals,
+            'user_id' => auth()->id(),
+            'author_mail' => $request->input('author_mail'),
+            'invoice_no' => Invoice::generateInvoiceNo(),
+            'invoice_date' => $request->input(
+                'invoice_date',
+                now()->toDateString()
+            ),
+            'due_date' => $request->input(
+                'due_date',
+                now()->addDays(7)->toDateString()
+            ),
+            'status' => $request->input('action') === 'draft'
+                ? 'draft'
+                : 'generated',
+            'notes' => $request->input('notes'),
+        ]);
 
-            return $invoice;
-        });
+        $this->syncItems($invoice, $request);
+        $this->syncInitialPayment($invoice, $request);
+        $invoice->recalculatePayments();
 
-        return redirect()
-            ->route('dashboard')
-            ->with('success', "Invoice {$invoice->invoice_no} created successfully.");
+        return $invoice;
+    });
+
+    // Send invoice-created notification emails
+    $notifyEmails = config('mail.invoice_cc_email');
+
+    if (filled($notifyEmails)) {
+
+        $emails = array_filter(
+            array_map('trim', explode(',', $notifyEmails))
+        );
+
+        $emailFailed = false;
+
+        foreach ($emails as $email) {
+
+            try {
+
+                Mail::to($email)->send(
+                    new InvoiceCreatedMail($invoice)
+                );
+
+            } catch (\Throwable $e) {
+
+                report($e);
+
+                \Log::error('Invoice creation email failed', [
+                    'invoice_no' => $invoice->invoice_no,
+                    'recipient' => $email,
+                    'error' => $e->getMessage(),
+                ]);
+
+                $emailFailed = true;
+            }
+        }
+
+        if ($emailFailed) {
+            return redirect()
+                ->route('dashboard')
+                ->with(
+                    'success',
+                    "Invoice {$invoice->invoice_no} created successfully, but one or more notification emails failed."
+                );
+        }
     }
+
+    return redirect()
+        ->route('dashboard')
+        ->with(
+            'success',
+            "Invoice {$invoice->invoice_no} created successfully."
+        );
+}
 
     public function show(Invoice $invoice)
     {
@@ -222,7 +278,7 @@ class InvoiceController extends Controller
                 'invoice_date' => $request->input('invoice_date', $invoice->invoice_date),
                 'due_date' => $request->input('due_date', $invoice->due_date),
                 'status' => $request->input('action') === 'draft' ? 'draft' : 'generated',
-                // 'notes' => $request->input('notes'),
+                'notes' => $request->input('notes'),
             ]);
 
             $invoice->items()->delete();
@@ -236,20 +292,69 @@ class InvoiceController extends Controller
             ->with('success', "Invoice {$invoice->invoice_no} updated successfully.");
     }
 
+    // public function destroy(Invoice $invoice)
+    // {
+    //     $invoiceNo = $invoice->invoice_no;
+    //     $customerName = $invoice->customer_name;
+    //     $customerEmail = $invoice->email;
+    //     $companyName = $invoice->company_name;
+
+    //     $notifyEmail = config('mail.invoice_cc_email');
+
+    //     $invoice->delete();
+
+    //     if (filled($notifyEmail)) {
+    //         try {
+    //             Mail::to($notifyEmail)->send(
+    //                 new InvoiceDeletedMail(
+    //                     $invoiceNo,
+    //                     $customerName,
+    //                     $customerEmail,
+    //                     $companyName
+    //                 )
+    //             );
+    //         } catch (\Throwable $e) {
+    //             report($e);
+
+    //             return redirect()
+    //                 ->route('dashboard')
+    //                 ->with(
+    //                     'success',
+    //                     "Invoice {$invoiceNo} deleted successfully, but notification email failed."
+    //                 );
+    //         }
+    //     }
+
+    //     return redirect()
+    //         ->route('dashboard')
+    //         ->with('success', "Invoice {$invoiceNo} deleted successfully.");
+    // }
+
+
     public function destroy(Invoice $invoice)
-    {
-        $invoiceNo = $invoice->invoice_no;
-        $customerName = $invoice->customer_name;
-        $customerEmail = $invoice->email;
-        $companyName = $invoice->company_name;
+{
+    $invoiceNo = $invoice->invoice_no;
+    $customerName = $invoice->customer_name;
+    $customerEmail = $invoice->email;
+    $companyName = $invoice->company_name;
 
-        $notifyEmail = config('mail.invoice_cc_email');
+    $notifyEmails = config('mail.invoice_cc_email');
 
-        $invoice->delete();
+    // Delete invoice
+    $invoice->delete();
 
-        if (filled($notifyEmail)) {
+    if (filled($notifyEmails)) {
+
+        $emails = array_filter(
+            array_map('trim', explode(',', $notifyEmails))
+        );
+
+        $emailFailed = false;
+
+        foreach ($emails as $email) {
             try {
-                Mail::to($notifyEmail)->send(
+                // Send separate email to each recipient
+                Mail::to($email)->send(
                     new InvoiceDeletedMail(
                         $invoiceNo,
                         $customerName,
@@ -259,20 +364,27 @@ class InvoiceController extends Controller
                 );
             } catch (\Throwable $e) {
                 report($e);
-
-                return redirect()
-                    ->route('dashboard')
-                    ->with(
-                        'success',
-                        "Invoice {$invoiceNo} deleted successfully, but notification email failed."
-                    );
+                $emailFailed = true;
             }
         }
 
-        return redirect()
-            ->route('dashboard')
-            ->with('success', "Invoice {$invoiceNo} deleted successfully.");
+        if ($emailFailed) {
+            return redirect()
+                ->route('dashboard')
+                ->with(
+                    'success',
+                    "Invoice {$invoiceNo} deleted successfully, but one or more notification emails failed."
+                );
+        }
     }
+
+    return redirect()
+        ->route('dashboard')
+        ->with(
+            'success',
+            "Invoice {$invoiceNo} deleted successfully and notification emails were sent."
+        );
+}
 
     public function storePayment(Request $request, Invoice $invoice)
     {
@@ -468,7 +580,7 @@ class InvoiceController extends Controller
             'payment_method' => 'required|string|max:100',
             'invoice_date' => 'nullable|date',
             'due_date' => 'nullable|date',
-            // 'notes' => 'nullable|string',
+            'notes' => 'nullable|string',
             'paid_amount' => 'nullable|numeric|min:0',
             'product' => 'required|array|min:1',
             'product.*' => 'required|string|max:255',

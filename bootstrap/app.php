@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'superadmin' => \App\Http\Middleware\SuperAdminMiddleware::class,
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'allow.ip' => \App\Http\Middleware\AllowSpecificIp::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

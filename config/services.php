@@ -35,10 +35,17 @@ return [
         ],
     ],
 
+    // 'whatsapp' => [
+    //     'token' => env('WHATSAPP_TOKEN'),
+    //     'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+    //     'api_version' => env('WHATSAPP_API_VERSION', 'v21.0'),
+    // ],
+
     'whatsapp' => [
-        'token' => env('WHATSAPP_TOKEN'),
-        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
-        'api_version' => env('WHATSAPP_API_VERSION', 'v21.0'),
-    ],
+    'api_key' => env('WHATSAPP_API_KEY'),
+    'base_url' => env('WHATSAPP_BASE_URL', 'https://api.interakt.ai'),
+    'template_name' => env('WHATSAPP_TEMPLATE_NAME'),
+    'template_language' => env('WHATSAPP_TEMPLATE_LANGUAGE', 'en'),
+],
 
 ];

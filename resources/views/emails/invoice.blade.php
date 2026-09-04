@@ -85,7 +85,8 @@
 
     <div class="footer">
         &copy; {{ now()->year }} Webzone Expertz &bull;
-        21 Graeme St, Mooroopna VIC 3629 &bull;
+        {{-- 21 Graeme St, Mooroopna VIC 3629  --}}
+        {{-- &bull; --}}
         <a href="mailto:{{ $invoice->author_mail }}">{{ $invoice->author_mail }}</a>
     </div>
 

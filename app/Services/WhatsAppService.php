@@ -9,58 +9,143 @@ class WhatsAppService
 {
     public function isConfigured(): bool
     {
-        return filled(config('services.whatsapp.token'))
-            && filled(config('services.whatsapp.phone_number_id'));
+        return filled(config('services.whatsapp.api_key'))
+            && filled(config('services.whatsapp.template_name'))
+            && filled(config('services.whatsapp.template_language'));
     }
 
-    public function sendDocument(string $phone, string $filePath, string $fileName, string $caption = ''): array
+    public function canSendViaApi(): bool
     {
-        $token = config('services.whatsapp.token');
-        $phoneNumberId = config('services.whatsapp.phone_number_id');
-        $version = config('services.whatsapp.api_version', 'v21.0');
+        if (! $this->isConfigured()) {
+            return false;
+        }
 
-        $upload = Http::withToken($token)
-            ->attach('file', file_get_contents($filePath), $fileName)
-            ->post("https://graph.facebook.com/{$version}/{$phoneNumberId}/media", [
-                'messaging_product' => 'whatsapp',
-                'type' => 'application/pdf',
-            ]);
+        $appUrl = strtolower((string) config('app.url'));
 
-        if (! $upload->successful()) {
-            Log::error('WhatsApp media upload failed', ['response' => $upload->json()]);
+        return filled($appUrl)
+            && ! str_contains($appUrl, 'localhost')
+            && ! str_contains($appUrl, '127.0.0.1');
+    }
 
+    public function sendDocument(
+        string $phone,
+        string $fileName,
+        string $pdfUrl,
+        string $invoiceNo,
+        string $totalFormatted
+    ): array {
+        $apiKey = config('services.whatsapp.api_key');
+        $baseUrl = rtrim(config('services.whatsapp.base_url', 'https://api.interakt.ai'), '/');
+        $templateName = config('services.whatsapp.template_name');
+        $languageCode = config('services.whatsapp.template_language', 'en');
+
+        $phone = preg_replace('/\D+/', '', $phone);
+
+        if ($phone === '') {
             return [
                 'success' => false,
-                'message' => $upload->json('error.message') ?? 'Failed to upload PDF to WhatsApp.',
+                'message' => 'Invalid WhatsApp phone number.',
             ];
         }
 
-        $mediaId = $upload->json('id');
+        if (str_starts_with($phone, '91')) {
+            $countryCode = '+91';
+            $phoneNumber = substr($phone, 2);
+        } elseif (str_starts_with($phone, '61')) {
+            $countryCode = '+61';
+            $phoneNumber = substr($phone, 2);
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Please enter a WhatsApp number with country code +91 or +61.',
+            ];
+        }
 
-        $send = Http::withToken($token)
-            ->post("https://graph.facebook.com/{$version}/{$phoneNumberId}/messages", [
-                'messaging_product' => 'whatsapp',
-                'to' => $phone,
-                'type' => 'document',
-                'document' => [
-                    'id' => $mediaId,
-                    'filename' => $fileName,
-                    'caption' => $caption,
+        $payload = [
+            'countryCode' => $countryCode,
+            'phoneNumber' => $phoneNumber,
+            'type' => 'Template',
+            'callbackData' => 'invoice_' . $invoiceNo,
+            'template' => [
+                'name' => $templateName,
+                'languageCode' => $languageCode,
+                'headerValues' => [$pdfUrl],
+                'fileName' => $fileName,
+                'bodyValues' => [
+                    $invoiceNo,
                 ],
-            ]);
+            ],
+        ];
 
-        if (! $send->successful()) {
-            Log::error('WhatsApp message send failed', ['response' => $send->json()]);
+        try {
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'Authorization' => 'Basic ' . $apiKey,
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                ])
+                ->post($baseUrl . '/v1/public/message/', $payload);
+
+            $responseData = $response->json() ?? [];
+
+            if (! $response->successful() || ($responseData['result'] ?? false) !== true) {
+
+                Log::error('Interakt WhatsApp API failed', [
+                    'status' => $response->status(),
+                    'response' => $responseData,
+                    'body' => $response->body(),
+                    'phone' => $phone,
+                    'template' => $templateName,
+                    'pdf_url' => $pdfUrl,
+                ]);
+
+                return [
+                    'success' => false,
+                    'message' => $responseData['message']
+                        ?? $responseData['error']
+                        ?? 'Interakt WhatsApp API failed.',
+                    'debug' => [
+                        'http_status' => $response->status(),
+                        'response' => $responseData,
+                    ],
+                ];
+            }
+
+            // if (! $response->successful() || ($responseData['result'] ?? false) !== true) {
+            //     Log::error('Interakt WhatsApp API failed', [
+            //         'status' => $response->status(),
+            //         'response' => $responseData,
+            //         'body' => $response->body(),
+            //         'phone' => $phone,
+            //         'template' => $templateName,
+            //         'pdf_url' => $pdfUrl,
+            //     ]);
+
+            //     return [
+            //         'success' => false,
+            //         'message' => $responseData['message']
+            //             ?? $responseData['error']
+            //             ?? 'Interakt could not send the WhatsApp message.',
+            //     ];
+            // }
+
+            // return [
+            //     'success' => true,
+            //     'mode' => 'api',
+            //     'message' => 'Invoice PDF queued for WhatsApp delivery.',
+            //     'message_id' => $responseData['id'] ?? null,
+            // ];
+        } catch (\Throwable $e) {
+            Log::error('Interakt WhatsApp exception', [
+                'message' => $e->getMessage(),
+                'phone' => $phone,
+                'template' => $templateName,
+            ]);
 
             return [
                 'success' => false,
-                'message' => $send->json('error.message') ?? 'Failed to send WhatsApp message.',
+                'message' => 'Unable to connect to Interakt WhatsApp API.',
             ];
         }
-
-        return [
-            'success' => true,
-            'message' => 'Invoice PDF sent successfully on WhatsApp.',
-        ];
     }
 }

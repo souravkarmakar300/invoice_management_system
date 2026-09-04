@@ -453,14 +453,6 @@ class InvoiceController extends Controller
         Storage::disk('public')->makeDirectory('invoices');
         $this->makePdf($invoice)->save($absolutePath);
 
-        $caption = "Invoice {$invoice->invoice_no} from Webzone Expertz. Total: $" . number_format((float) $invoice->total, 2);
-
-        if ($whatsApp->isConfigured()) {
-            $result = $whatsApp->sendDocument($phone, $absolutePath, $fileName, $caption);
-
-            return response()->json($result, $result['success'] ? 200 : 500);
-        }
-
         $token = Str::random(40);
         Cache::put('invoice_share_' . $token, [
             'invoice_id' => $invoice->id,
@@ -469,72 +461,201 @@ class InvoiceController extends Controller
         ], now()->addDays(2));
 
         $pdfUrl = route('invoices.shared', $token);
-        $message = rawurlencode("Hello,\n\nPlease find invoice {$invoice->invoice_no}.\nTotal: $" . number_format((float) $invoice->total, 2) . "\n\nDownload PDF:\n{$pdfUrl}");
+        $totalFormatted = number_format((float) $invoice->total, 2);
 
-        return response()->json([
-            'success' => true,
-            'mode' => 'web',
-            'message' => 'Opening WhatsApp with invoice PDF link.',
-            'whatsapp_url' => "https://wa.me/{$phone}?text={$message}",
-            'pdf_url' => $pdfUrl,
-        ]);
+        if (! $whatsApp->isConfigured()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'WhatsApp API is not configured. Please check WHATSAPP_API_KEY and template settings.',
+            ], 500);
+        }
+
+        if (! $whatsApp->canSendViaApi()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'WhatsApp API cannot be used with the current APP_URL configuration.',
+            ], 500);
+        }
+
+        $result = $whatsApp->sendDocument(
+            $phone,
+            $fileName,
+            $pdfUrl,
+            $invoice->invoice_no,
+            $totalFormatted
+        );
+
+        if (! $result['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'],
+                'debug' => $result['debug'] ?? null,
+            ], 422);
+        }
+
+        return response()->json($result);
+
+        // if ($whatsApp->canSendViaApi()) {
+        //     $result = $whatsApp->sendDocument(
+        //         $phone,
+        //         $fileName,
+        //         $pdfUrl,
+        //         $invoice->invoice_no,
+        //         $totalFormatted
+        //     );
+
+        //     if ($result['success']) {
+        //         return response()->json($result);
+        //     }
+        // }
+
+        // $message = "Hello,\n\nPlease find invoice {$invoice->invoice_no}.\nTotal: \${$totalFormatted}\n\nDownload PDF:\n{$pdfUrl}";
+
+        // return response()->json([
+        //     'success' => true,
+        //     'mode' => 'web',
+        //     'message' => $whatsApp->isConfigured()
+        //         ? 'WhatsApp API is not available on localhost. Opening WhatsApp with PDF link.'
+        //         : 'Opening WhatsApp with invoice PDF link.',
+        //     'whatsapp_url' => 'https://wa.me/' . $phone . '?text=' . rawurlencode($message),
+        //     'pdf_url' => $pdfUrl,
+        // ]);
     }
 
+    // public function sendEmail(Request $request, Invoice $invoice)
+    // {
+    //     $data = $request->validate([
+    //         'to_email' => ['required', 'email', 'max:255'],
+    //         'to_name' => ['required', 'string', 'max:255'],
+    //         'message' => ['nullable', 'string', 'max:1000'],
+    //     ]);
+
+    //     $invoice->load(['items', 'payments']);
+
+    //     $bodyMessage = $data['message']
+    //         ?: "Please find attached invoice {$invoice->invoice_no}. Total: $"
+    //         . number_format((float) $invoice->total, 2)
+    //         . ". Amount due: $"
+    //         . number_format((float) $invoice->due_amount, 2)
+    //         . ".";
+
+    //     try {
+
+    //         // Send individual email to customer
+    //         Mail::to($data['to_email'], $data['to_name'])
+    //             ->send(
+    //                 new InvoiceMail(
+    //                     $invoice,
+    //                     $data['to_name'],
+    //                     $bodyMessage
+    //                 )
+    //             );
+
+    //         // Send separate individual email to admin
+    //         $extraEmail = config('mail.invoice_cc_email');
+
+    //         if ($extraEmail) {
+    //             Mail::to($extraEmail)
+    //                 ->send(
+    //                     new InvoiceMail(
+    //                         $invoice,
+    //                         'Invoice Admin',
+    //                         $bodyMessage
+    //                     )
+    //                 );
+    //         }
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => "Invoice {$invoice->invoice_no} sent successfully.",
+    //         ]);
+    //     } catch (\Throwable $e) {
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to send email: ' . $e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
+
+
+
     public function sendEmail(Request $request, Invoice $invoice)
-    {
-        $data = $request->validate([
-            'to_email' => ['required', 'email', 'max:255'],
-            'to_name' => ['required', 'string', 'max:255'],
-            'message' => ['nullable', 'string', 'max:1000'],
-        ]);
+{
+    $data = $request->validate([
+        'to_email' => ['required', 'email', 'max:255'],
+        'to_name' => ['required', 'string', 'max:255'],
+        'message' => ['nullable', 'string', 'max:1000'],
+    ]);
 
-        $invoice->load(['items', 'payments']);
+    $invoice->load(['items', 'payments']);
 
-        $bodyMessage = $data['message']
-            ?: "Please find attached invoice {$invoice->invoice_no}. Total: $"
+    $customerEmail = trim($data['to_email']);
+    $customerName = trim($data['to_name']);
+
+    $bodyMessage = !empty(trim($data['message'] ?? ''))
+        ? trim($data['message'])
+        : "Please find attached invoice {$invoice->invoice_no}. Total: $"
             . number_format((float) $invoice->total, 2)
             . ". Amount due: $"
             . number_format((float) $invoice->due_amount, 2)
             . ".";
 
-        try {
+    try {
 
-            // Send individual email to customer
-            Mail::to($data['to_email'], $data['to_name'])
+        // ==========================================
+        // Send invoice email to customer
+        // ==========================================
+
+        Mail::to($customerEmail, $customerName)
+            ->send(
+                new InvoiceMail(
+                    $invoice,
+                    $customerName,
+                    $bodyMessage
+                )
+            );
+
+        // ==========================================
+        // Send separate invoice email to admin
+        // ==========================================
+
+        $extraEmail = trim((string) config('mail.invoice_cc_email'));
+
+        if (
+            !empty($extraEmail) &&
+            filter_var($extraEmail, FILTER_VALIDATE_EMAIL)
+        ) {
+            Mail::to($extraEmail)
                 ->send(
                     new InvoiceMail(
                         $invoice,
-                        $data['to_name'],
+                        'Invoice Admin',
                         $bodyMessage
                     )
                 );
-
-            // Send separate individual email to admin
-            $extraEmail = config('mail.invoice_cc_email');
-
-            if ($extraEmail) {
-                Mail::to($extraEmail)
-                    ->send(
-                        new InvoiceMail(
-                            $invoice,
-                            'Invoice Admin',
-                            $bodyMessage
-                        )
-                    );
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => "Invoice {$invoice->invoice_no} sent successfully.",
-            ]);
-        } catch (\Throwable $e) {
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to send email: ' . $e->getMessage(),
-            ], 500);
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Invoice {$invoice->invoice_no} sent successfully.",
+        ]);
+
+    } catch (\Throwable $e) {
+
+        \Log::error('Invoice email sending failed', [
+            'invoice' => $invoice->invoice_no,
+            'customer_email' => $customerEmail,
+            'admin_email' => $extraEmail ?? null,
+            'error' => $e->getMessage(),
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to send email: ' . $e->getMessage(),
+        ], 500);
     }
+}
 
     public function sharedPdf(string $token)
     {
@@ -574,10 +695,13 @@ class InvoiceController extends Controller
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string',
+            'payment_gateway' => 'required|string|max:255',
             'bank_name' => 'nullable|string|max:255',
             'account_number' => 'nullable|string|max:100',
-            'bsb' => 'nullable|string|max:50',
-            'payment_method' => 'required|string|max:100',
+            'bank_address' => 'nullable|string|max:255',
+            // 'bsb' => 'nullable|string|max:50',
+            'payment_method' => 'nullable|string|max:100',
+            'currency' => 'required|string|in:USD,CAD',
             'invoice_date' => 'nullable|date',
             'due_date' => 'nullable|date',
             'notes' => 'nullable|string',

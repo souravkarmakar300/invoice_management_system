@@ -287,27 +287,27 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Company Name <span class="text-danger">*</span></label>
+                            <label class="form-label">Business Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="company_name" required
                                 value="{{ old('company_name', $invoice?->company_name) }}">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Customer Name <span class="text-danger">*</span></label>
+                            <label class="form-label">Owner Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="customer_name" required
                                 value="{{ old('customer_name', $invoice?->customer_name) }}">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Email</label>
+                            <label class="form-label">Email Address</label>
                             <input type="email" class="form-control" name="email"
                                 value="{{ old('email', $invoice?->email) }}">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Phone</label>
+                            <label class="form-label">Mobile Number</label>
                             <input type="text" class="form-control" name="phone"
                                 value="{{ old('phone', $invoice?->phone) }}">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Address</label>
+                            <label class="form-label">Billing Address</label>
                             <textarea class="form-control" rows="2" name="address">{{ old('address', $invoice?->address) }}</textarea>
                         </div>
                     </div>
@@ -324,75 +324,127 @@
                 <div class="card-body">
                     <div class="row">
 
-                        {{-- Bank Name --}}
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Bank Name</label>
+                        {{-- Payment Gateway --}}
+<div class="col-md-3 mb-3">
+    <label class="form-label">
+        Payment Gateway <span class="text-danger">*</span>
+    </label>
 
-                            <select class="form-select" name="bank_name" id="bank_name">
-                                <option value="">Select Bank</option>
+    <select class="form-select" name="payment_gateway" id="payment_gateway" required>
+        <option value="">Select Payment Gateway</option>
 
-                                <option value="Westpac"
-                                    {{ old('bank_name', $invoice?->bank_name) == 'Westpac' ? 'selected' : '' }}>
-                                    Westpac
-                                </option>
+        <option value="Payoneer"
+            {{ old('payment_gateway', $invoice?->payment_gateway) == 'Payoneer' ? 'selected' : '' }}>
+            Payoneer
+        </option>
 
-                                <option value="Wise"
-                                    {{ old('bank_name', $invoice?->bank_name) == 'Wise' ? 'selected' : '' }}>  
-                                    Wise
-                                </option>
-
-                            </select>
-                        </div>
-
-
-                        {{-- BSB --}}
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">BSB</label>
-
-                            <input type="text"
-                                class="form-control"
-                                name="bsb"
-                                id="bsb"
-                                value="{{ old('bsb', $invoice?->bsb) }}">
-                        </div>
+        <option value="Stripe"
+            {{ old('payment_gateway', $invoice?->payment_gateway) == 'Stripe' ? 'selected' : '' }}>
+            Stripe
+        </option>
+    </select>
+</div>
 
 
-                        {{-- Account Number --}}
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Account Number</label>
+{{-- Payment Method --}}
+<div class="col-md-3 mb-3" id="payment_method_wrapper">
+    <label class="form-label">
+        Payment Method <span class="text-danger">*</span>
+    </label>
 
-                            <input type="text"
-                                class="form-control"
-                                name="account_number"
-                                id="account_number"
-                                value="{{ old('account_number', $invoice?->account_number) }}">
-                        </div>
+    <select class="form-select" name="payment_method" id="payment_method">
+        <option value="">Select Payment Method</option>
+
+        <option value="Bank Transfer"
+            {{ old('payment_method', $invoice?->payment_method) == 'Bank Transfer' ? 'selected' : '' }}>
+            Bank Transfer
+        </option>
+
+        <option value="Card"
+            {{ old('payment_method', $invoice?->payment_method) == 'Card' ? 'selected' : '' }}>
+            Card
+        </option>
+    </select>
+</div>
 
 
-                        {{-- Payment Method --}}
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">
-                                Payment Method <span class="text-danger">*</span>
-                            </label>
+{{-- Bank Name --}}
+<div class="col-md-3 mb-3" id="bank_name_wrapper">
+    <label class="form-label">
+        Bank Name <span class="text-danger">*</span>
+    </label>
 
-                            <select class="form-select" name="payment_method" required>
+    <select class="form-select" name="bank_name" id="bank_name">
+        <option value="">Select Bank</option>
 
-                                @foreach (['Cash', 'Bank Transfer', 'PayPal', 'Card'] as $method)
+        <option value="Citibank"
+            {{ old('bank_name', $invoice?->bank_name) == 'Citibank' ? 'selected' : '' }}>
+            Citibank
+        </option>
 
-                                    <option value="{{ $method }}"
-                                        {{ old(
-                                            'payment_method',
-                                            $invoice?->payment_method ?? 'Bank Transfer'
-                                        ) === $method ? 'selected' : '' }}>
+        <option value="Citibank NA Canadian Branch"
+            {{ old('bank_name', $invoice?->bank_name) == 'Citibank NA Canadian Branch' ? 'selected' : '' }}>
+            Citibank NA Canadian Branch
+        </option>
+    </select>
+</div>
 
-                                        {{ $method }}
 
-                                    </option>
+{{-- Account Number --}}
+<div class="col-md-3 mb-3" id="account_number_wrapper">
+    <label class="form-label">
+        Account No. <span class="text-danger">*</span>
+    </label>
 
-                                @endforeach
+    <input
+        type="text"
+        class="form-control"
+        name="account_number"
+        id="account_number"
+        value="{{ old('account_number', $invoice?->account_number) }}"
+        placeholder="Account Number"
+        readonly
+    >
+</div>
 
-                            </select>
-                        </div>
+
+{{-- Bank Address --}}
+<div class="col-md-4 mb-3" id="bank_address_wrapper">
+    <label class="form-label">
+        Bank Address <span class="text-danger">*</span>
+    </label>
+
+    <input
+        type="text"
+        class="form-control"
+        name="bank_address"
+        id="bank_address"
+        value="{{ old('bank_address', $invoice?->bank_address) }}"
+        placeholder="Bank Address"
+        readonly
+    >
+</div>
+
+                        {{-- Choose Currency --}}
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">
+                            Choose Currency <span class="text-danger">*</span>
+                        </label>
+
+                        <select class="form-select" name="currency" id="currency" required>
+
+                            <option value="USD"
+                                {{ old('currency', $invoice?->currency ?? 'USD') == 'USD' ? 'selected' : '' }}>
+                                USD - US Dollar
+                            </option>
+
+                            <option value="CAD"
+                                {{ old('currency', $invoice?->currency) == 'CAD' ? 'selected' : '' }}>
+                                CAD - Canadian Dollar
+                            </option>
+
+                        </select>
+                    </div>
 
                     </div>
                 </div>
@@ -641,7 +693,7 @@
         calculateTotals();
     </script>
 
-<script>
+{{-- <script>
     const bankDetails = {
         "Westpac": {
             bsb: "033254",
@@ -673,7 +725,155 @@
             accountInput.value = '';
         }
     });
-</script>
+</script> --}}
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    
+        const paymentGateway = document.getElementById('payment_gateway');
+        const paymentMethod = document.getElementById('payment_method');
+        const bankName = document.getElementById('bank_name');
+    
+        const paymentMethodWrapper = document.getElementById('payment_method_wrapper');
+        const bankNameWrapper = document.getElementById('bank_name_wrapper');
+        const accountNumberWrapper = document.getElementById('account_number_wrapper');
+        const bankAddressWrapper = document.getElementById('bank_address_wrapper');
+    
+        const accountNumber = document.getElementById('account_number');
+        const bankAddress = document.getElementById('bank_address');
+    
+        const bankDetails = {
+            "Citibank": {
+                address: "111 Wall Street New York, NY 10043 USA",
+                account_number: "70580480001405704"
+            },
+    
+            "Citibank NA Canadian Branch": {
+                address: "123 Front St. West Toronto, ON M5J 2M3",
+                account_number: "3001372046"
+            }
+        };
+    
+    
+        function clearBankDetails() {
+            bankName.value = "";
+            accountNumber.value = "";
+            bankAddress.value = "";
+        }
+    
+    
+        function updateBankDetails() {
+            const bank = bankName.value;
+    
+            if (bankDetails[bank]) {
+                bankAddress.value = bankDetails[bank].address;
+                accountNumber.value = bankDetails[bank].account_number;
+            } else {
+                accountNumber.value = "";
+                bankAddress.value = "";
+            }
+        }
+    
+    
+        function updatePaymentFields() {
+    
+            const gateway = paymentGateway.value;
+            const method = paymentMethod.value;
+    
+            // Default: hide everything
+            paymentMethodWrapper.style.display = 'none';
+            bankNameWrapper.style.display = 'none';
+            accountNumberWrapper.style.display = 'none';
+            bankAddressWrapper.style.display = 'none';
+    
+            paymentMethod.required = false;
+            bankName.required = false;
+            accountNumber.required = false;
+            bankAddress.required = false;
+    
+    
+            // ==========================================
+            // PAYONEER
+            // ==========================================
+            if (gateway === 'Payoneer') {
+    
+                paymentMethodWrapper.style.display = 'block';
+                paymentMethod.required = true;
+    
+    
+                // Bank Transfer selected
+                if (method === 'Bank Transfer') {
+    
+                    bankNameWrapper.style.display = 'block';
+                    accountNumberWrapper.style.display = 'block';
+                    bankAddressWrapper.style.display = 'block';
+    
+                    bankName.required = true;
+                    accountNumber.required = true;
+                    bankAddress.required = true;
+    
+                    updateBankDetails();
+                }
+    
+    
+                // Card selected
+                if (method === 'Card') {
+    
+                    clearBankDetails();
+                }
+            }
+    
+    
+            // ==========================================
+            // STRIPE
+            // ==========================================
+            if (gateway === 'Stripe') {
+    
+                paymentMethod.value = "";
+                clearBankDetails();
+            }
+        }
+    
+    
+        // Payment Gateway change
+        paymentGateway.addEventListener('change', function () {
+    
+            if (this.value === 'Stripe') {
+                paymentMethod.value = "";
+                clearBankDetails();
+            }
+    
+            updatePaymentFields();
+        });
+    
+    
+        // Payment Method change
+        paymentMethod.addEventListener('change', function () {
+    
+            if (this.value === 'Card') {
+                clearBankDetails();
+            }
+    
+            updatePaymentFields();
+        });
+    
+    
+        // Bank Name change
+        bankName.addEventListener('change', function () {
+            updateBankDetails();
+        });
+    
+    
+        // Run when page loads
+        updatePaymentFields();
+    
+    });
+    </script>
+
+
+
+
 
 
 </body>

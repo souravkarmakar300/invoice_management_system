@@ -5,7 +5,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LoginController;
 
 // Guest Routes
-Route::middleware(['allow.ip', 'guest'])->group(function () {
+Route::middleware(['guest'])->group(function () {
     Route::get('/', [LoginController::class, 'index'])->name('login');
     Route::post('/', [LoginController::class, 'login'])->name('login.submit');
 });
@@ -14,7 +14,7 @@ Route::middleware(['allow.ip', 'guest'])->group(function () {
 Route::get('/share/invoice/{token}', [InvoiceController::class, 'sharedPdf'])->name('invoices.shared');
 
 // Authenticated — admin & superadmin
-Route::middleware(['allow.ip','auth', 'admin'])->group(function () {
+Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [InvoiceController::class, 'index'])->name('dashboard');
     Route::get('/invoices/export-csv', [InvoiceController::class, 'exportCsv'])->name('invoices.export');
     Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('create_invoice');
@@ -29,7 +29,7 @@ Route::middleware(['allow.ip','auth', 'admin'])->group(function () {
 });
 
 // Super Admin only — edit & delete
-Route::middleware(['allow.ip','auth', 'superadmin'])->group(function () {
+Route::middleware(['auth', 'superadmin'])->group(function () {
     Route::get('/invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
     Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
     Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');

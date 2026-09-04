@@ -33,7 +33,7 @@
                  user-select: none;
                 -webkit-user-select: none;
                 -moz-user-select: none;
-                -ms-user-select: none;
+                -ms-user-select: none; 
             }
 
             .invoice {
@@ -68,6 +68,25 @@
 
             .company-info {
                 font-size: 11px;
+                margin-bottom: 10px;
+            }
+
+            .company-images {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                margin-top: 5px;
+            }
+
+            .company-images img {
+                width: 100px !important;
+                height: 25px !important;
+                max-width: 100px !important;
+                max-height: 25px !important;
+                object-fit: contain;
+                display: block;
+                border: none;
+                margin-bottom: 5px;
             }
 
             .invoice-title {
@@ -253,17 +272,60 @@
 }
 
 .payment-history-cell {
-    padding: 5px 8px !important;
+    padding: 8px !important;
+    background: #f8fafc !important;
+    vertical-align: top !important;
 }
 
-.payment-history-title {
-    margin-bottom: 4px !important;
-    font-size: 11px !important;
+.payment-history-inner {
+    width: 58%;
+    margin-left: auto;
+    border-collapse: collapse;
 }
 
-.payment-history-row {
-    padding: 2px 0 !important;
+.payment-history-inner td {
+    border: none !important;
+    padding: 3px 6px !important;
     font-size: 10px !important;
+    vertical-align: middle;
+}
+
+.payment-history-inner .payment-history-title td {
+    font-weight: 700;
+    text-align: center;
+    padding-bottom: 6px !important;
+    color: #1e3a8a;
+}
+
+.payment-history-inner .payment-amount {
+    text-align: right !important;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.payment-empty {
+    text-align: center !important;
+    color: #6b7280;
+    font-style: italic;
+    padding: 8px 0 !important;
+}
+
+.invoice-items-table tfoot td {
+    background: #f8fafc;
+}
+
+.invoice-items-table .invoice-total-row td {
+    border-top: 2px solid #2563eb !important;
+    font-weight: 700;
+}
+
+.invoice-items-table .invoice-paid-row td {
+    font-weight: 600;
+}
+
+.item-description small {
+    color: #6b7280;
+    font-size: 10px;
 }
 
 
@@ -627,13 +689,78 @@
                 -webkit-overflow-scrolling: touch;
             }
 
-            .table thead {
-                background: #2563eb;
-                color: #fff;
+            .invoice-items-table {
+                margin-bottom: 0;
             }
 
-            .table th {
+            .invoice-items-table thead th {
+                font-size: 13px;
+                text-transform: uppercase;
+                letter-spacing: .03em;
+                padding: 12px 10px;
+            }
+
+            .invoice-items-table tbody td {
+                padding: 12px 10px;
+            }
+
+            .invoice-items-table tfoot td {
+                background: #f8fafc;
+                padding: 10px;
+            }
+
+            .invoice-items-table .invoice-total-row td {
+                border-top: 2px solid #2563eb;
+                font-weight: 700;
+            }
+
+            .invoice-items-table .invoice-paid-row td {
+                font-weight: 600;
+            }
+
+            .payment-history-cell {
+                padding: 14px !important;
+                background: #f8fafc;
+            }
+
+            .payment-history-inner {
+                width: 60%;
+                margin-left: auto;
+                border-collapse: collapse;
+            }
+
+            .payment-history-inner td {
                 border: none;
+                padding: 6px 8px;
+                font-size: 13px;
+            }
+
+            .payment-history-inner .payment-history-title td {
+                font-weight: 700;
+                text-align: center;
+                color: #1e3a8a;
+                padding-bottom: 8px;
+            }
+
+            .payment-history-inner .payment-amount {
+                text-align: right;
+                font-weight: 700;
+                white-space: nowrap;
+            }
+
+            .payment-empty {
+                text-align: center;
+                color: #6b7280;
+                font-style: italic;
+            }
+
+            .item-description small {
+                color: #6b7280;
+            }
+
+            .table thead th {
+                background: #2563eb;
+                color: #fff;
             }
 
             .table td {
@@ -798,6 +925,7 @@
                 color: #6b7280;
                 font-size: 14px;
                 word-break: break-word;
+                margin-bottom: 10px;
             }
 
             .invoice-title {
@@ -902,6 +1030,7 @@
 
                 .company-info {
                     font-size: 13px;
+                    margin-bottom: 10px;
                 }
 
                 .invoice-title {
@@ -993,10 +1122,10 @@
                 @endif
             @endif
             
-            {{-- <button type="button" class="btn btn-sm btn-success" style="background:#25D366;border-color:#25D366;"
+            <button type="button" class="btn btn-sm btn-success" style="background:#25D366;border-color:#25D366;"
                 data-bs-toggle="modal" data-bs-target="#whatsappModal">
                 <i class="bi bi-whatsapp"></i> Send WhatsApp
-            </button> --}}
+            </button> 
             <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#emailModal">
                 <i class="bi bi-envelope-fill"></i> Send Email
             </button>
@@ -1209,6 +1338,11 @@
                         return;
                     }
 
+                    if (data.mode === 'web' && data.whatsapp_url) {
+                        window.location.href = data.whatsapp_url;
+                        return;
+                    }
+
                     if (data.whatsapp_url) {
                         window.location.href = data.whatsapp_url;
                         return;
@@ -1295,16 +1429,6 @@
                         <div>
     <h2 class="company-name mb-1">WEBZONE EXPERTZ</h2>
 
-    <p class="company-info mb-1">
-        {{-- <i class="fas fa-map-marker-alt me-2 text-primary"></i> --}}
-        <span>21 Graeme St, Mooroopna VIC 3629</span>
-    </p>
-
-    <p class="company-info mb-1">
-        {{-- <i class="fas fa-id-card me-2 text-primary"></i> --}}
-        <span>ABN: 73 478 018 645</span>
-    </p>
-
     {{-- Call --}}
     <p class="company-info mb-1 contact-line">
         @if ($isPdf)
@@ -1315,7 +1439,7 @@
             <i class="fas fa-phone contact-icon"></i>
         @endif
 
-        <span>61488835849</span>
+        <span>+12272571716</span>
     </p>
 
     {{-- WhatsApp --}}
@@ -1328,8 +1452,40 @@
             <i class="fab fa-whatsapp contact-icon whatsapp-icon"></i>
         @endif
 
-        <span>0483915095</span
+        <span>+15176455057</span
     </p>
+
+    @if($isPdf)
+
+        <div class="company-images" style="margin-top: 2px;">
+            <span style="display: block; font-size: 10px; color: #666; margin-bottom: 4px;">
+                Countries We Operate In
+            </span>
+
+            <img
+                src="{{ public_path('images/flags.png') }}"
+                alt="Flags"
+                style="display: block; width: 155px; margin: 5px auto 0 auto;"
+            >
+        </div>
+
+        @else
+
+        <div class="company-images" style="margin-top: 2px; display: flex; flex-direction: column;">
+            <span style="font-size: 10px; color: #666; margin-bottom: 4px;">
+                Countries We Operate In
+            </span>
+
+            <img
+                src="{{ asset('images/flags.png') }}"
+                alt="Flags"
+                style="display: block; margin-top: 5px; width: 145px;"
+            >
+        </div>
+
+    @endif
+
+
 </div>
 
                     </div>
@@ -1394,162 +1550,135 @@
                 </div>
                 <div class="col-12 col-sm-6 col-md-4">
                     <div class="card-box">
-                <div class="label">Payment</div>
+                        <div class="label">Payment</div>
 
-                @if ($invoice->bank_name)
-                    <div class="payment-info">
-                        Bank Name: {{ $invoice->bank_name }}
+                        @if ($invoice->payment_gateway)
+                            <div class="payment-info">
+                                Payment Gateway: {{ $invoice->payment_gateway }}
+                            </div>
+                        @endif
+
+                        @if ($invoice->bank_name)
+                            <div class="payment-info">
+                                Bank Name: {{ $invoice->bank_name }}
+                            </div>
+                        @endif
+
+                        @if ($invoice->account_number)
+                            <div class="payment-info">
+                                Account No.: {{ $invoice->account_number }}
+                            </div>
+                        @endif
+                        
+                        @if ($invoice->bank_address)
+                            <div class="payment-info">
+                                Bank Address: {{ $invoice->bank_address }}
+                            </div>
+                        @endif
+
+
+                        @if($invoice->payment_method)
+                            <div class="payment-info">
+                                Payment Method: {{ $invoice->payment_method }}
+                            </div>
+                        @endif
+
+                        <div class="payment-info">
+                            Currency: {{ $invoice->currency }}
+                        </div>
+
                     </div>
-                @endif
-
-                <div class="payment-info">
-                    A/C Name: Webzone Expertz
-                </div>
-
-                @if ($invoice->bsb)
-                    <div class="payment-info">
-                        BSB: {{ $invoice->bsb }}
-                    </div>
-                @endif
-
-                @if ($invoice->account_number)
-                    <div class="payment-info">
-                        Account: {{ $invoice->account_number }}
-                    </div>
-                @endif
-
-            </div>
                 </div>
             </div>
         </div>
 
         <div class="section pt-0">
-    <div class="table-responsive-invoice">
-  <table class="table">
+            <div class="table-responsive-invoice">
+                <table class="table invoice-items-table">
 
-    <thead>
-        <tr>
-            <th>#</th>
-            <th>Description</th>
-            <th class="text-center">Qty</th>
-            <th class="text-end">Price</th>
-            <th class="text-end">Total</th>
-        </tr>
-    </thead>
+                    <thead>
+                        <tr>
+                            <th width="6%">#</th>
+                            <th>Description</th>
+                            <th class="text-center" width="12%">Qty</th>
+                            <th class="text-end" width="18%">Total</th>
+                        </tr>
+                    </thead>
 
-    <tbody>
-        @foreach ($invoice->items as $index => $item)
-            <tr>
-                <td>{{ $index + 1 }}</td>
+                    <tbody>
+                        @foreach ($invoice->items as $index => $item)
+                            <tr>
+                                <td class="text-center">{{ $index + 1 }}</td>
+                                <td class="item-description">
+                                    <strong>{{ $item->product }}</strong>
+                                    @if ($item->description)
+                                        <br>
+                                        <small>{{ $item->description }}</small>
+                                    @endif
+                                </td>
+                                <td class="text-center">{{ number_format($item->qty, 2) }}</td>
+                                <td class="text-end">${{ number_format($item->amount, 2) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
 
-                <td>
-                    {{ $item->product }}
+                    <tfoot>
+                        <tr class="invoice-total-row">
+                            <td colspan="3" class="text-end">
+                                <strong>Total Amount (Project Cost)</strong>
+                            </td>
+                            <td class="text-end">
+                                <strong>${{ number_format($invoice->total, 2) }}</strong>
+                            </td>
+                        </tr>
 
-                    @if ($item->description)
-                        <br>
-                        <small>
-                            {{ $item->description }}
-                        </small>
-                    @endif
-                </td>
+                        <tr class="invoice-paid-row">
+                            <td colspan="3" class="text-end">Total Paid</td>
+                            <td class="text-end">${{ number_format($invoice->total_paid, 2) }}</td>
+                        </tr>
 
-                <td class="text-center">
-                    {{ number_format($item->qty, 2) }}
-                </td>
+                        <tr>
+                            <td colspan="4" class="payment-history-cell">
+                                <table class="payment-history-inner" width="100%" cellspacing="0" cellpadding="0">
+                                    <tr class="payment-history-title">
+                                        <td colspan="3">Payment History</td>
+                                    </tr>
 
-                <td class="text-end">
-                    ${{ number_format($item->unit_price, 2) }}
-                </td>
+                                    @forelse ($invoice->payments->sortBy('paid_at')->values() as $index => $payment)
+                                        <tr>
+                                            <td class="payment-label">
+                                                @if ($index === 0)
+                                                    1st Payment
+                                                @elseif ($index === 1)
+                                                    2nd Payment
+                                                @elseif ($index === 2)
+                                                    3rd Payment
+                                                @else
+                                                    {{ $index + 1 }}th Payment
+                                                @endif
+                                            </td>
+                                            <td class="payment-date">
+                                                {{ $payment->paid_at?->format('d M Y') ?? '—' }}
+                                            </td>
+                                            <td class="payment-amount">
+                                                ${{ number_format($payment->amount, 2) }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="3" class="text-center payment-empty">
+                                                No payment recorded
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </table>
+                            </td>
+                        </tr>
+                    </tfoot>
 
-                <td class="text-end">
-                    ${{ number_format($item->amount, 2) }}
-                </td>
-            </tr>
-        @endforeach
-    </tbody>
-
-    <tfoot>
-
-        <tr>
-            <td colspan="4" class="text-end">
-                <strong>Total Amount (Project Cost)</strong>
-            </td>
-
-            <td class="text-end">
-                <strong>
-                    ${{ number_format($invoice->total, 2) }}
-                </strong>
-            </td>
-        </tr>
-
-        <tr>
-            <td colspan="4" class="text-end">
-                Total Paid
-            </td>
-
-            <td class="text-end">
-                ${{ number_format($invoice->payments->sum('amount'), 2) }}
-            </td>
-        </tr>
-
-        {{-- Payment History --}}
-        <tr>
-            <td colspan="3"></td>
-
-            <td colspan="2" class="payment-history-cell">
-
-                <div class="payment-history-title">
-                    Payment History
-                </div>
-
-                @forelse (
-                    $invoice->payments
-                        ->sortBy('paid_at')
-                        ->values()
-                    as $index => $payment
-                )
-
-                    <div class="payment-history-row">
-
-                        <span class="payment-label">
-                            @if ($index == 0)
-                                1st
-                            @elseif ($index == 1)
-                                2nd
-                            @elseif ($index == 2)
-                                3rd
-                            @else
-                                {{ $index + 1 }}th
-                            @endif
-                            Payment
-                        </span>
-
-                        <span class="payment-date">
-                            {{ $payment->paid_at?->format('d M Y') ?? '—' }}
-                        </span>
-
-                        <strong class="payment-amount">
-                            ${{ number_format($payment->amount, 2) }}
-                        </strong>
-
-                    </div>
-
-                @empty
-
-                    <div class="payment-empty">
-                        No payment recorded
-                    </div>
-
-                @endforelse
-
-            </td>
-        </tr>
-
-    </tfoot>
-
-</table>
-    </div>
-</div>
+                </table>
+            </div>
+        </div>
 
         <div class="section pt-0">
             <div class="row justify-content-end">
